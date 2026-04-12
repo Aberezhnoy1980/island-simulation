@@ -1,0 +1,198 @@
+island:
+  width: 100
+  height: 20
+  tickDurationMillis: 500
+  initialAnimals:
+    wolf: 50
+    boa: 30
+    fox: 30
+    bear: 5
+    eagle: 20
+    horse: 20
+    deer: 20
+    rabbit: 150
+    mouse: 500
+    goat: 140
+    sheep: 140
+    boar: 50
+    buffalo: 10
+    duck: 200
+    caterpillar: 1000
+  stopCondition:
+    type: ALL_ANIMALS_DEAD
+
+animals:
+  wolf:
+    name: "Волк"
+    weightKg: 50.0
+    maxPerLocation: 30
+    speed: 3
+    maxFoodKg: 8.0
+    type: PREDATOR
+  boa:
+    name: "Удав"
+    weightKg: 15.0
+    maxPerLocation: 30
+    speed: 1
+    maxFoodKg: 3.0
+    type: PREDATOR
+  fox:
+    name: "Лиса"
+    weightKg: 8.0
+    maxPerLocation: 30
+    speed: 2
+    maxFoodKg: 2.0
+    type: PREDATOR
+  bear:
+    name: "Медведь"
+    weightKg: 500.0
+    maxPerLocation: 5
+    speed: 2
+    maxFoodKg: 80.0
+    type: PREDATOR
+  eagle:
+    name: "Орел"
+    weightKg: 6.0
+    maxPerLocation: 20
+    speed: 3
+    maxFoodKg: 1.0
+    type: PREDATOR
+  horse:
+    name: "Лошадь"
+    weightKg: 400.0
+    maxPerLocation: 20
+    speed: 4
+    maxFoodKg: 60.0
+    type: HERBIVORE
+  deer:
+    name: "Олень"
+    weightKg: 300.0
+    maxPerLocation: 20
+    speed: 4
+    maxFoodKg: 50.0
+    type: HERBIVORE
+  rabbit:
+    name: "Кролик"
+    weightKg: 2.0
+    maxPerLocation: 150
+    speed: 2
+    maxFoodKg: 0.45
+    type: HERBIVORE
+  mouse:
+    name: "Мышь"
+    weightKg: 0.05
+    maxPerLocation: 500
+    speed: 1
+    maxFoodKg: 0.01
+    type: HERBIVORE
+  goat:
+    name: "Коза"
+    weightKg: 60.0
+    maxPerLocation: 140
+    speed: 3
+    maxFoodKg: 10.0
+    type: HERBIVORE
+  sheep:
+    name: "Овца"
+    weightKg: 70.0
+    maxPerLocation: 140
+    speed: 3
+    maxFoodKg: 15.0
+    type: HERBIVORE
+  boar:
+    name: "Кабан"
+    weightKg: 400.0
+    maxPerLocation: 50
+    speed: 2
+    maxFoodKg: 50.0
+    type: HERBIVORE
+  buffalo:
+    name: "Буйвол"
+    weightKg: 700.0
+    maxPerLocation: 10
+    speed: 3
+    maxFoodKg: 100.0
+    type: HERBIVORE
+  duck:
+    name: "Утка"
+    weightKg: 1.0
+    maxPerLocation: 200
+    speed: 4
+    maxFoodKg: 0.15
+    type: HERBIVORE
+  caterpillar:
+    name: "Гусеница"
+    weightKg: 0.01
+    maxPerLocation: 1000
+    speed: 0
+    maxFoodKg: 0.0
+    type: HERBIVORE
+  plant:
+    name: "Растения"
+    weightKg: 1.0
+    maxPerLocation: 200
+    speed: 0
+    maxFoodKg: 0.0
+    type: PLANT
+
+dietMatrix:
+  wolf:
+    horse: 10
+    deer: 15
+    rabbit: 60
+    mouse: 80
+    goat: 60
+    sheep: 70
+    boar: 15
+    duck: 10
+    caterpillar: 40
+    plant: 0
+  boa:
+    fox: 15
+    rabbit: 20
+    mouse: 40
+    duck: 10
+  fox:
+    rabbit: 70
+    mouse: 90
+    duck: 60
+    caterpillar: 40
+  bear:
+    boa: 80
+    horse: 40
+    deer: 80
+    rabbit: 80
+    mouse: 90
+    goat: 70
+    sheep: 70
+    boar: 50
+    duck: 10
+  eagle:
+    fox: 10
+    rabbit: 90
+    mouse: 90
+    duck: 80
+  horse:
+    plant: 100
+  deer:
+    plant: 100
+  rabbit:
+    plant: 100
+  mouse:
+    caterpillar: 90
+    plant: 100
+  goat:
+    plant: 100
+  sheep:
+    plant: 100
+  boar:
+    mouse: 50
+    caterpillar: 90
+    plant: 100
+  buffalo:
+    plant: 100
+  duck:
+    caterpillar: 90
+    plant: 100
+  caterpillar:
+    plant: 100
