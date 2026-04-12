@@ -1,6 +1,7 @@
 package ru.javarush.domain;
 
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -49,7 +50,7 @@ public final class Island {
         Map<String, Integer> totals = new HashMap<>();
         for (int r = 0; r < height; r++) {
             for (int c = 0; c < width; c++) {
-                for (var e : cells[r][c].populationView().entrySet()) {
+                for (var e : cells[r][c].populationCountsBySpecies().entrySet()) {
                     totals.merge(e.getKey(), e.getValue(), Integer::sum);
                 }
             }
@@ -62,5 +63,20 @@ public final class Island {
                 .flatMap(Arrays::stream)
                 .mapToInt(Location::totalCreatures)
                 .sum();
+    }
+
+    /**
+     * Сколько экземпляров каждого {@link OrganismKind} на острове.
+     */
+    public Map<OrganismKind, Long> totalPopulationByKind() {
+        Map<OrganismKind, Long> byKind = new EnumMap<>(OrganismKind.class);
+        for (int r = 0; r < height; r++) {
+            for (int c = 0; c < width; c++) {
+                for (Organism o : cells[r][c].residentsView()) {
+                    byKind.merge(o.kind(), 1L, Long::sum);
+                }
+            }
+        }
+        return byKind;
     }
 }

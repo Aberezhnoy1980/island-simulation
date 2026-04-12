@@ -22,14 +22,18 @@ public final class IslandBuilder {
         Objects.requireNonNull(config, "config");
         var settings = config.island();
         Island island = new Island(settings.width(), settings.height());
-        scatterInitialPopulations(island, settings.initialAnimals());
+        scatterInitialPopulations(config, island, settings.initialAnimals());
         return island;
     }
 
-    private void scatterInitialPopulations(Island island, Map<String, Integer> initialAnimals) {
+    private void scatterInitialPopulations(
+            IslandSimulationConfig config,
+            Island island,
+            Map<String, Integer> initialAnimals) {
         if (initialAnimals == null || initialAnimals.isEmpty()) {
             return;
         }
+        var factory = new OrganismFactory(config);
         int h = island.height();
         int w = island.width();
         for (var entry : initialAnimals.entrySet()) {
@@ -41,7 +45,7 @@ public final class IslandBuilder {
             for (int i = 0; i < count; i++) {
                 int row = random.nextInt(h);
                 int col = random.nextInt(w);
-                island.cell(row, col).add(speciesId, 1);
+                island.cell(row, col).add(factory.create(speciesId));
             }
         }
     }

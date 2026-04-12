@@ -4,6 +4,7 @@ import ru.javarush.config.IslandConfigLoader;
 import ru.javarush.config.IslandSimulationConfig;
 import ru.javarush.domain.Island;
 import ru.javarush.domain.IslandBuilder;
+import ru.javarush.domain.OrganismKind;
 
 import java.util.Random;
 
@@ -33,5 +34,12 @@ public final class Main {
         System.out.printf("Species tracked on island: %d (config defines %d kinds)%n",
                 totals.size(),
                 config.animals().size());
+
+        long predatorsInConfig = config.animals().values().stream()
+                .filter(s -> OrganismKind.PREDATOR.name().equalsIgnoreCase(s.type()))
+                .count();
+        System.out.printf("Predator species in config: %d; sample cell (0,0) population: %d%n",
+                predatorsInConfig,
+                island.cell(0, 0).totalCreatures());
     }
 }
