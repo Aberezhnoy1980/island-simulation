@@ -32,7 +32,7 @@ java -jar target/Island-simulation-1.0-SNAPSHOT.jar
 mvn -q compile exec:java
 ```
 
-Приложение загружает конфиг, строит сетку (`Island` / `Location`), создаёт организмы через `OrganismFactory` (`Predator` / `Herbivore` / `Plant`) и раскладывает стартовые популяции по клеткам. Движок `SimulationEngine` выполняет тик как цепочку фаз (`movement` → `feeding` → `reproduction` → `death`). Фаза `movement` раскидывает животных по сетке (до `speed` шагов в случайных направлениях, у границ шаг сбрасывается); растения и виды с `speed: 0` стоят на месте. Фаза `feeding` использует `dietMatrix` (успех при `random.nextInt(100) < chance`) и `maxFoodKg` за тик. Фазы `reproduction` и `death` пока пустые.
+Приложение загружает конфиг, строит сетку (`Island` / `Location`), создаёт организмы через `OrganismFactory` (`Predator` / `Herbivore` / `Plant`) и раскладывает стартовые популяции по клеткам. Движок `SimulationEngine` выполняет тик как цепочку фаз (`movement` → `feeding` → `reproduction` → `death`). Фаза `movement` раскидывает животных по сетке (до `speed` шагов в случайных направлениях, у границ шаг сбрасывается); растения и виды с `speed: 0` стоят на месте. Фаза `feeding` использует `dietMatrix` (успех при `random.nextInt(100) < chance`) и `maxFoodKg` за тик. Фаза `death` увеличивает счётчик голода у животных, если за тик ничего не съели, и удаляет тех, у кого `ticksWithoutFood >= island.maxTicksWithoutFood` (в YAML; иначе дефолт 10). Растения не голодают. Фаза `reproduction` пока пустая.
 
 Консольная псевдографика и Unicode-символы по видам — позже, см. ТЗ (раздел про UI); в коде удобнее держать отображение отдельно от домена.
 

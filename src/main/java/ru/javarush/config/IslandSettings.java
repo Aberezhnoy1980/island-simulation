@@ -13,6 +13,8 @@ public record IslandSettings(
         int height,
         long tickDurationMillis,
         Map<String, Integer> initialAnimals,
-        StopCondition stopCondition
+        StopCondition stopCondition,
+        /** Сколько полных тиков подряд без еды переносит животное; {@code null} — взять дефолт движка симуляции. */
+        Integer maxTicksWithoutFood
 ) {
 }

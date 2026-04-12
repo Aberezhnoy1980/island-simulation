@@ -1,9 +1,11 @@
 package ru.javarush.simulation;
 
 /**
- * Фаза гибели (голод, возраст, съедены). Логика будет добавлена позже.
+ * Фаза гибели: голод (остальное — позже).
  */
 public final class DeathPhase implements LifecyclePhase {
+
+    private final DeathService deathService = new DeathService();
 
     @Override
     public String id() {
@@ -12,6 +14,7 @@ public final class DeathPhase implements LifecyclePhase {
 
     @Override
     public void execute(SimulationContext context) {
-        // TODO: голод, естественная смерть, уже съеденные
+        deathService.applyStarvation(context.island(), context.config().island());
     }
 }
+

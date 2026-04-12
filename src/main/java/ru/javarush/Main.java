@@ -52,7 +52,7 @@ public final class Main {
             engine.tick();
         }
         System.out.printf(
-                "Demo simulation: %d ticks (movement + feeding active). Total creatures: %d%n",
+                "Demo simulation: %d ticks (movement, feeding, starvation death). Total creatures: %d%n",
                 demoTicks,
                 island.totalCreatures());
     }

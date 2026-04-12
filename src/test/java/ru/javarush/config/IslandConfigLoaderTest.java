@@ -16,6 +16,7 @@ class IslandConfigLoaderTest {
         assertEquals(100, cfg.island().width());
         assertEquals(20, cfg.island().height());
         assertEquals(500L, cfg.island().tickDurationMillis());
+        assertEquals(5, cfg.island().maxTicksWithoutFood());
         assertEquals("ALL_ANIMALS_DEAD", cfg.island().stopCondition().type());
 
         assertNotNull(cfg.animals());

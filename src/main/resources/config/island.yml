@@ -18,6 +18,7 @@ island:
     buffalo: 10
     duck: 200
     caterpillar: 1000
+  maxTicksWithoutFood: 5
   stopCondition:
     type: ALL_ANIMALS_DEAD
 

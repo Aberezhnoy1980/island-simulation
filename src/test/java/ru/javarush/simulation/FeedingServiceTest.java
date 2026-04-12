@@ -22,7 +22,7 @@ class FeedingServiceTest {
     private final FeedingService feeding = new FeedingService();
 
     /** {@code nextInt(100)} всегда 0 — любой шанс {@code > 0} срабатывает. */
-    private static Random alwaysWinRoll() {
+    static Random alwaysWinRoll() {
         return new Random() {
             @Override
             public int nextInt(int bound) {
@@ -55,7 +55,8 @@ class FeedingServiceTest {
                 5,
                 500L,
                 Map.of(),
-                new StopCondition("NONE"));
+                new StopCondition("NONE"),
+                null);
         return new IslandSimulationConfig(island, animals, diet);
     }
 
