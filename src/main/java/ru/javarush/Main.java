@@ -5,6 +5,8 @@ import ru.javarush.config.IslandSimulationConfig;
 import ru.javarush.domain.Island;
 import ru.javarush.domain.IslandBuilder;
 import ru.javarush.domain.OrganismKind;
+import ru.javarush.simulation.SimulationContext;
+import ru.javarush.simulation.SimulationEngine;
 
 import java.util.Random;
 
@@ -41,5 +43,17 @@ public final class Main {
         System.out.printf("Predator species in config: %d; sample cell (0,0) population: %d%n",
                 predatorsInConfig,
                 island.cell(0, 0).totalCreatures());
+
+        var random = new Random();
+        var simulationContext = new SimulationContext(island, config, random);
+        var engine = SimulationEngine.withDefaultPhases(simulationContext);
+        int demoTicks = 3;
+        for (int i = 0; i < demoTicks; i++) {
+            engine.tick();
+        }
+        System.out.printf(
+                "Dry-run simulation: %d ticks (phases: movement → feeding → reproduction → death), population unchanged: %d%n",
+                demoTicks,
+                island.totalCreatures());
     }
 }
