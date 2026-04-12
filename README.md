@@ -14,15 +14,29 @@
 
 - Java 21  
 - Maven  
-- Конфигурация: файлы в `src/main/resources` (подробности — в ТЗ)
+- YAML: Jackson (`jackson-dataformat-yaml`)  
+- Тесты: JUnit 5  
+- Конфигурация по умолчанию: `src/main/resources/config/island.yml` (см. ТЗ)
 
-## Сборка
+## Сборка, тесты, запуск
 
 ```bash
-mvn -q compile
+mvn -q test
+mvn -q package
+java -jar target/Island-simulation-1.0-SNAPSHOT.jar
 ```
 
-Точка входа (`main`) и команда запуска JAR появятся в следующих итерациях вместе с настройкой `maven-jar-plugin` / `exec-maven-plugin`.
+Либо без упаковки JAR:
+
+```bash
+mvn -q compile exec:java
+```
+
+Приложение загружает конфиг, строит сетку острова (`Island` / `Location`) и раскладывает стартовые популяции по клеткам; затем печатает сводку. Логика тиков симуляции — в следующих инкрементах.
+
+## CI
+
+При push и pull request в ветки `main`, `develop` запускается [GitHub Actions](.github/workflows/ci.yml): `mvn -B verify` (тесты и сборка).
 
 ## Документация
 
