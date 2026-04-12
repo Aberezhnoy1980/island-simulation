@@ -1,9 +1,11 @@
 package ru.javarush.simulation;
 
 /**
- * Фаза питания (растения / жертвы по матрице диеты). Логика будет добавлена позже.
+ * Фаза питания (растения / жертвы по матрице диеты).
  */
 public final class FeedingPhase implements LifecyclePhase {
+
+    private final FeedingService feedingService = new FeedingService();
 
     @Override
     public String id() {
@@ -12,6 +14,6 @@ public final class FeedingPhase implements LifecyclePhase {
 
     @Override
     public void execute(SimulationContext context) {
-        // TODO: охота и поедание с учётом dietMatrix и веса
+        feedingService.feedAll(context.island(), context.config(), context.random());
     }
 }

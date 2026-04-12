@@ -1,0 +1,112 @@
+package ru.javarush.simulation;
+
+import ru.javarush.config.IslandSimulationConfig;
+import ru.javarush.domain.Animal;
+import ru.javarush.domain.Island;
+import ru.javarush.domain.Location;
+import ru.javarush.domain.Organism;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
+
+/**
+ * Питание на клетке: для каждого животного (в случайном порядке) читается строка {@code dietMatrix},
+ * по вероятности {@code 0..100} (успех, если {@code nextInt(100) < chance}) съедается жертва с клетки,
+ * пока хватает {@code maxFoodKg}. Растения не охотятся.
+ * <p>
+ * Жертва съедается целиком: если {@code prey.weightKg} больше остатка до {@code maxFoodKg}, эта жертва
+ * пропускается (частичное поедание одной особи пока не моделируется). При необходимости в YAML подбирают
+ * вес «порции» растения или поднимают лимит у травоядного.
+ */
+public final class FeedingService {
+
+    public void feedAll(Island island, IslandSimulationConfig config, Random random) {
+        Objects.requireNonNull(island, "island");
+        Objects.requireNonNull(config, "config");
+        Objects.requireNonNull(random, "random");
+
+        resetStomachs(island);
+
+        int height = island.height();
+        int width = island.width();
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                feedAtCell(island.cell(row, col), config, random);
+            }
+        }
+    }
+
+    private static void resetStomachs(Island island) {
+        for (int row = 0; row < island.height(); row++) {
+            for (int col = 0; col < island.width(); col++) {
+                for (Organism o : island.cell(row, col).residentsView()) {
+                    if (o instanceof Animal animal) {
+                        animal.startFeedingRound();
+                    }
+                }
+            }
+        }
+    }
+
+    private void feedAtCell(Location cell, IslandSimulationConfig config, Random random) {
+        List<Animal> hunters = new ArrayList<>();
+        for (Organism o : cell.residentsView()) {
+            if (o instanceof Animal a) {
+                hunters.add(a);
+            }
+        }
+        Collections.shuffle(hunters, random);
+
+        for (Animal hunter : hunters) {
+            Map<String, Integer> diet = config.dietMatrix().get(hunter.speciesId());
+            if (diet == null || diet.isEmpty()) {
+                continue;
+            }
+            while (tryEatOneMeal(cell, hunter, diet, random)) {
+                // пока есть удачные охоты и запас maxFoodKg
+            }
+        }
+    }
+
+    /**
+     * Одна попытка: перебираются кандидаты в случайном порядке; при успешном броске и влезании по весу жертва удаляется.
+     *
+     * @return {@code true}, если съели одну жертву
+     */
+    private boolean tryEatOneMeal(Location cell, Animal hunter, Map<String, Integer> diet, Random random) {
+        List<Organism> candidates = new ArrayList<>();
+        for (Organism prey : cell.residentsView()) {
+            if (prey == hunter) {
+                continue;
+            }
+            Integer chance = diet.get(prey.speciesId());
+            if (chance == null || chance <= 0) {
+                continue;
+            }
+            candidates.add(prey);
+        }
+        if (candidates.isEmpty()) {
+            return false;
+        }
+        Collections.shuffle(candidates, random);
+
+        for (Organism prey : candidates) {
+            int chance = diet.get(prey.speciesId());
+            if (random.nextInt(100) >= chance) {
+                continue;
+            }
+            double preyKg = prey.settings().weightKg();
+            if (!hunter.canConsumePreyWeight(preyKg)) {
+                continue;
+            }
+            hunter.registerMeal(preyKg);
+            cell.remove(prey);
+            return true;
+        }
+        return false;
+    }
+}
