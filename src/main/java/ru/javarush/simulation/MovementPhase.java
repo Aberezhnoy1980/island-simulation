@@ -1,9 +1,11 @@
 package ru.javarush.simulation;
 
 /**
- * Фаза перемещения животных между локациями. Логика будет добавлена позже.
+ * Фаза перемещения животных между локациями.
  */
 public final class MovementPhase implements LifecyclePhase {
+
+    private final MovementService movementService = new MovementService();
 
     @Override
     public String id() {
@@ -12,6 +14,6 @@ public final class MovementPhase implements LifecyclePhase {
 
     @Override
     public void execute(SimulationContext context) {
-        // TODO: перемещение с учётом speed и границ острова; растения не двигаются
+        movementService.relocateMobileOrganisms(context.island(), context.random());
     }
 }

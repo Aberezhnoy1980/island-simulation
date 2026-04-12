@@ -52,7 +52,7 @@ public final class Main {
             engine.tick();
         }
         System.out.printf(
-                "Dry-run simulation: %d ticks (phases: movement → feeding → reproduction → death), population unchanged: %d%n",
+                "Demo simulation: %d ticks (movement active; other phases no-op). Total creatures: %d%n",
                 demoTicks,
                 island.totalCreatures());
     }
