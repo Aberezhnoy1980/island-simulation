@@ -12,6 +12,8 @@ public record AnimalSettings(
         int maxPerLocation,
         int speed,
         double maxFoodKg,
-        String type
+        String type,
+        /** Вероятность размножения за тик при паре сытных особей, 0–100; {@code null} — дефолт движка. */
+        Integer reproductionChancePercent
 ) {
 }

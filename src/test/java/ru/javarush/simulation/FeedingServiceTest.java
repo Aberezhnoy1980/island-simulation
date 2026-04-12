@@ -64,9 +64,9 @@ class FeedingServiceTest {
     void predatorEatsRabbitWhenHuntSucceeds() {
         var animals = Map.of(
                 "wolf",
-                new AnimalSettings("Волк", 50.0, 30, 3, 8.0, "PREDATOR"),
+                new AnimalSettings("Волк", 50.0, 30, 3, 8.0, "PREDATOR", null),
                 "rabbit",
-                new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE"));
+                new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE", null));
         var diet = Map.of("wolf", Map.of("rabbit", 100));
         IslandSimulationConfig cfg = minimalConfig(animals, diet);
 
@@ -87,9 +87,9 @@ class FeedingServiceTest {
     void predatorDoesNotEatWhenRollFails() {
         var animals = Map.of(
                 "wolf",
-                new AnimalSettings("Волк", 50.0, 30, 3, 8.0, "PREDATOR"),
+                new AnimalSettings("Волк", 50.0, 30, 3, 8.0, "PREDATOR", null),
                 "rabbit",
-                new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE"));
+                new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE", null));
         var diet = Map.of("wolf", Map.of("rabbit", 60));
         IslandSimulationConfig cfg = minimalConfig(animals, diet);
 
@@ -109,9 +109,9 @@ class FeedingServiceTest {
     void herbivoreEatsPlant() {
         var animals = Map.of(
                 "rabbit",
-                new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE"),
+                new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE", null),
                 "plant",
-                new AnimalSettings("Растения", 0.2, 200, 0, 0.0, "PLANT"));
+                new AnimalSettings("Растения", 0.2, 200, 0, 0.0, "PLANT", null));
         var diet = Map.of("rabbit", Map.of("plant", 100));
         IslandSimulationConfig cfg = minimalConfig(animals, diet);
 
@@ -132,9 +132,9 @@ class FeedingServiceTest {
     void predatorEatsTwoLightPreyWithinMaxFoodKg() {
         var animals = Map.of(
                 "wolf",
-                new AnimalSettings("Волк", 50.0, 30, 3, 8.0, "PREDATOR"),
+                new AnimalSettings("Волк", 50.0, 30, 3, 8.0, "PREDATOR", null),
                 "mouse",
-                new AnimalSettings("Мышь", 0.05, 500, 1, 0.01, "HERBIVORE"));
+                new AnimalSettings("Мышь", 0.05, 500, 1, 0.01, "HERBIVORE", null));
         var diet = Map.of("wolf", Map.of("mouse", 100));
         IslandSimulationConfig cfg = minimalConfig(animals, diet);
 
@@ -155,9 +155,9 @@ class FeedingServiceTest {
         var animals = new HashMap<String, AnimalSettings>();
         animals.put(
                 "wolf",
-                new AnimalSettings("Волк", 50.0, 30, 3, 2.0, "PREDATOR"));
-        animals.put("deer", new AnimalSettings("Олень", 300.0, 20, 4, 50.0, "HERBIVORE"));
-        animals.put("mouse", new AnimalSettings("Мышь", 0.05, 500, 1, 0.01, "HERBIVORE"));
+                new AnimalSettings("Волк", 50.0, 30, 3, 2.0, "PREDATOR", null));
+        animals.put("deer", new AnimalSettings("Олень", 300.0, 20, 4, 50.0, "HERBIVORE", null));
+        animals.put("mouse", new AnimalSettings("Мышь", 0.05, 500, 1, 0.01, "HERBIVORE", null));
         var diet = Map.of(
                 "wolf",
                 Map.of(

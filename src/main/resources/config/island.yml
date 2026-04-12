@@ -78,6 +78,7 @@ animals:
     maxPerLocation: 150
     speed: 2
     maxFoodKg: 0.45
+    reproductionChancePercent: 20
     type: HERBIVORE
   mouse:
     name: "Мышь"

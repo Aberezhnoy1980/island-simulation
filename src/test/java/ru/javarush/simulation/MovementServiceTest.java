@@ -33,7 +33,7 @@ class MovementServiceTest {
         Island island = new Island(10, 10);
         var rabbit = new Herbivore(
                 "rabbit",
-                new AnimalSettings("Кролик", 2.0, 150, 3, 0.45, "HERBIVORE"));
+                new AnimalSettings("Кролик", 2.0, 150, 3, 0.45, "HERBIVORE", null));
         island.cell(0, 0).add(rabbit);
 
         movement.relocateMobileOrganisms(island, fixedDirection(1));
@@ -49,7 +49,7 @@ class MovementServiceTest {
         Island island = new Island(5, 5);
         var plant = new Plant(
                 "plant",
-                new AnimalSettings("Растения", 1.0, 200, 0, 0.0, "PLANT"));
+                new AnimalSettings("Растения", 1.0, 200, 0, 0.0, "PLANT", null));
         island.cell(2, 2).add(plant);
 
         movement.relocateMobileOrganisms(island, fixedDirection(1));
@@ -63,7 +63,7 @@ class MovementServiceTest {
         Island island = new Island(5, 5);
         var caterpillar = new Herbivore(
                 "caterpillar",
-                new AnimalSettings("Гусеница", 0.01, 1000, 0, 0.0, "HERBIVORE"));
+                new AnimalSettings("Гусеница", 0.01, 1000, 0, 0.0, "HERBIVORE", null));
         island.cell(1, 1).add(caterpillar);
 
         movement.relocateMobileOrganisms(island, fixedDirection(1));
@@ -77,7 +77,7 @@ class MovementServiceTest {
         Island island = new Island(3, 3);
         var rabbit = new Herbivore(
                 "rabbit",
-                new AnimalSettings("Кролик", 2.0, 150, 5, 0.45, "HERBIVORE"));
+                new AnimalSettings("Кролик", 2.0, 150, 5, 0.45, "HERBIVORE", null));
         island.cell(0, 1).add(rabbit);
         // always north -> cannot leave row 0
         movement.relocateMobileOrganisms(island, fixedDirection(0));
@@ -93,7 +93,7 @@ class MovementServiceTest {
         for (int i = 0; i < 50; i++) {
             var h = new Herbivore(
                     "rabbit",
-                    new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE"));
+                    new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE", null));
             island.cell(rnd.nextInt(20), rnd.nextInt(20)).add(h);
         }
         int before = island.totalCreatures();

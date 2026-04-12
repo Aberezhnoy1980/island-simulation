@@ -1,9 +1,11 @@
 package ru.javarush.simulation;
 
 /**
- * Фаза размножения при выполнении условий. Логика будет добавлена позже.
+ * Фаза размножения при выполнении условий.
  */
 public final class ReproductionPhase implements LifecyclePhase {
+
+    private final ReproductionService reproductionService = new ReproductionService();
 
     @Override
     public String id() {
@@ -12,6 +14,6 @@ public final class ReproductionPhase implements LifecyclePhase {
 
     @Override
     public void execute(SimulationContext context) {
-        // TODO: пары, лимиты maxPerLocation, вероятности
+        reproductionService.reproduce(context.island(), context.config(), context.random());
     }
 }

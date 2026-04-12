@@ -23,9 +23,9 @@ class DeathServiceTest {
     private static IslandSimulationConfig configRabbitOnly(int maxTicksWithoutFood) {
         var animals = Map.of(
                 "rabbit",
-                new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE"),
+                new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE", null),
                 "plant",
-                new AnimalSettings("Растения", 0.2, 200, 0, 0.0, "PLANT"));
+                new AnimalSettings("Растения", 0.2, 200, 0, 0.0, "PLANT", null));
         var diet = Map.of("rabbit", Map.of("plant", 100));
         var island = new IslandSettings(
                 3,
