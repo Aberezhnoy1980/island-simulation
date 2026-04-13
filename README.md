@@ -37,9 +37,9 @@ mvn -q exec:java -Dexec.args="--ticks=1000 --report-every=100"
 
 Лимит тиков: по умолчанию `500`, иначе первый аргумент-число или `--ticks=N`.  
 Частота промежуточной статистики: `--report-every=N` (по умолчанию `50`).  
-Пауза между тиками берётся из `island.tickDurationMillis`.
+Пауза между тиками берётся из `island.tickDurationMillis`; в отчёте печатается общий баланс и топ-3 вида по численности.
 
-Приложение строит остров из конфига и гоняет `SimulationRunner` до `stopCondition` в YAML (поддержан `ALL_ANIMALS_DEAD`) или до лимита тиков.
+Приложение строит остров из конфига и гоняет `SimulationRunner` до `stopCondition` в YAML (`ALL_ANIMALS_DEAD`, `NO_HERBIVORES`, `NO_PREDATORS`) или до лимита тиков.
 
 Порядок фаз: **`plantGrowth`** → `movement` → `feeding` → `reproduction` → `death`. Рост растений — `island.plantGrowthChancePercent` (в YAML; иначе дефолт 25), не выше `maxPerLocation` для вида `PLANT` на клетке.
 

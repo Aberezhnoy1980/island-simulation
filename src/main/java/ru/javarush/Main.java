@@ -10,6 +10,8 @@ import ru.javarush.simulation.SimulationEngine;
 import ru.javarush.simulation.SimulationRunner;
 import ru.javarush.simulation.StopConditionEvaluator;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -82,12 +84,18 @@ public final class Main {
         long predators = byKind.getOrDefault(OrganismKind.PREDATOR, 0L);
         long herbivores = byKind.getOrDefault(OrganismKind.HERBIVORE, 0L);
         long plants = byKind.getOrDefault(OrganismKind.PLANT, 0L);
+        List<String> topSpecies = island.totalPopulationBySpecies().entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue(Comparator.reverseOrder()))
+                .limit(3)
+                .map(e -> e.getKey() + "=" + e.getValue())
+                .toList();
         System.out.printf(
-                "%s => total=%d, predators=%d, herbivores=%d, plants=%d%n",
+                "%s => total=%d, predators=%d, herbivores=%d, plants=%d, top=%s%n",
                 title,
                 island.totalCreatures(),
                 predators,
                 herbivores,
-                plants);
+                plants,
+                topSpecies);
     }
 }
