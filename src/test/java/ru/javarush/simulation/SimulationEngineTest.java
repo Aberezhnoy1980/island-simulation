@@ -45,6 +45,22 @@ class SimulationEngineTest {
                 engine.phasesView().stream().map(LifecyclePhase::id).toList());
     }
 
+    @Test
+    void tickWithStatsContainsPhaseDurationsAndPopulationDelta() {
+        var cfg = new IslandConfigLoader().loadDefault();
+        Island island = new IslandBuilder(new Random(0)).build(cfg);
+        var ctx = new SimulationContext(island, cfg, new Random(0));
+        var engine = SimulationEngine.withDefaultPhases(ctx);
+
+        var execution = engine.tickWithStats();
+
+        assertEquals(1, execution.tickNumber());
+        assertEquals(5, execution.phaseDurationNanos().size());
+        assertEquals(
+                List.of("plantGrowth", "movement", "feeding", "reproduction", "death"),
+                execution.phaseDurationNanos().keySet().stream().toList());
+    }
+
     private static final class RecordingPhase implements LifecyclePhase {
         private final String id;
         private final List<String> log;

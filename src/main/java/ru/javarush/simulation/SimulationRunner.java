@@ -15,6 +15,11 @@ public final class SimulationRunner {
         void onTickCompleted(long tickNumber, SimulationContext context);
     }
 
+    @FunctionalInterface
+    public interface TickExecutionObserver {
+        void onTickCompleted(TickExecution execution, SimulationContext context);
+    }
+
     /**
      * @return сколько тиков реально выполнено
      */
@@ -34,6 +39,24 @@ public final class SimulationRunner {
             long reportEveryTicks,
             TickObserver observer
     ) {
+        return runWithExecutionObserver(
+                engine,
+                maxTicks,
+                tickDelayMillis,
+                reportEveryTicks,
+                (execution, context) -> observer.onTickCompleted(execution.tickNumber(), context));
+    }
+
+    /**
+     * Расширенный запуск: observer получает метрики тика.
+     */
+    public long runWithExecutionObserver(
+            SimulationEngine engine,
+            long maxTicks,
+            long tickDelayMillis,
+            long reportEveryTicks,
+            TickExecutionObserver observer
+    ) {
         Objects.requireNonNull(engine, "engine");
         Objects.requireNonNull(observer, "observer");
         if (maxTicks < 0) {
@@ -48,10 +71,10 @@ public final class SimulationRunner {
 
         long executed = 0;
         while (executed < maxTicks) {
-            engine.tick();
-            executed++;
+            TickExecution execution = engine.tickWithStats();
+            executed = execution.tickNumber();
             if (reportEveryTicks > 0 && executed % reportEveryTicks == 0) {
-                observer.onTickCompleted(executed, engine.context());
+                observer.onTickCompleted(execution, engine.context());
             }
             if (stopCondition.shouldStop(engine.context().island(), engine.context().config().island().stopCondition())) {
                 break;

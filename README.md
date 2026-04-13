@@ -43,6 +43,7 @@ mvn -q exec:java -Dexec.args="--ticks=1000 --report-every=100"
 
 Порядок фаз: **`plantGrowth`** → `movement` → `feeding` → `reproduction` → `death`. Рост растений — `island.plantGrowthChancePercent` (в YAML; иначе дефолт 25), не выше `maxPerLocation` для вида `PLANT` на клетке.
 Для фазы `movement` можно включить параллельное планирование перемещений через `island.parallelMovementPlanning: true` (применение плана остаётся последовательным, чтобы не ломать целостность данных).
+В промежуточных отчётах по тикам дополнительно печатается `delta` (изменение числа существ за тик) и время фаз в миллисекундах.
 
 Перед запуском выполняется валидация `island.yml`: размеры/тайминги, диапазоны процентов, ссылки на существующие виды в `initialAnimals` и `dietMatrix`, поддерживаемые `stopCondition`.
 

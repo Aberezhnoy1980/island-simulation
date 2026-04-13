@@ -9,6 +9,7 @@ import ru.javarush.simulation.SimulationContext;
 import ru.javarush.simulation.SimulationEngine;
 import ru.javarush.simulation.SimulationRunner;
 import ru.javarush.simulation.StopConditionEvaluator;
+import ru.javarush.simulation.TickExecution;
 
 import java.util.Comparator;
 import java.util.List;
@@ -40,21 +41,21 @@ public final class Main {
                 settings.tickDurationMillis());
 
         Island island = new IslandBuilder(random).build(config);
-        printSnapshot("Start", island);
+        printSnapshot("Start", island, null);
 
         var simulationContext = new SimulationContext(island, config, random);
         var engine = SimulationEngine.withDefaultPhases(simulationContext);
-        long executed = new SimulationRunner().run(
+        long executed = new SimulationRunner().runWithExecutionObserver(
                 engine,
                 maxTicks,
                 settings.tickDurationMillis(),
                 reportEveryTicks,
-                (tick, ctx) -> printSnapshot("Tick " + tick, ctx.island()));
+                (execution, ctx) -> printSnapshot("Tick " + execution.tickNumber(), ctx.island(), execution));
 
         var stopEval = new StopConditionEvaluator();
         boolean stopMatched = stopEval.shouldStop(island, settings.stopCondition());
 
-        printSnapshot("Done", island);
+        printSnapshot("Done", island, null);
         System.out.printf("Executed ticks: %d, stop condition met: %b%n", executed, stopMatched);
     }
 
@@ -79,7 +80,7 @@ public final class Main {
         return DEFAULT_REPORT_EVERY_TICKS;
     }
 
-    private static void printSnapshot(String title, Island island) {
+    private static void printSnapshot(String title, Island island, TickExecution execution) {
         Map<OrganismKind, Long> byKind = island.totalPopulationByKind();
         long predators = byKind.getOrDefault(OrganismKind.PREDATOR, 0L);
         long herbivores = byKind.getOrDefault(OrganismKind.HERBIVORE, 0L);
@@ -89,13 +90,23 @@ public final class Main {
                 .limit(3)
                 .map(e -> e.getKey() + "=" + e.getValue())
                 .toList();
+        String extras = "";
+        if (execution != null) {
+            int delta = execution.creaturesAfter() - execution.creaturesBefore();
+            String phaseStats = execution.phaseDurationNanos().entrySet().stream()
+                    .map(e -> e.getKey() + "=" + String.format("%.2fms", e.getValue() / 1_000_000.0))
+                    .toList()
+                    .toString();
+            extras = ", delta=" + delta + ", phases=" + phaseStats;
+        }
         System.out.printf(
-                "%s => total=%d, predators=%d, herbivores=%d, plants=%d, top=%s%n",
+                "%s => total=%d, predators=%d, herbivores=%d, plants=%d, top=%s%s%n",
                 title,
                 island.totalCreatures(),
                 predators,
                 herbivores,
                 plants,
-                topSpecies);
+                topSpecies,
+                extras);
     }
 }
