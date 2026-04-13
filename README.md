@@ -33,11 +33,17 @@ mvn -q compile exec:java
 mvn -q exec:java -Dexec.args="2000"
 mvn -q exec:java -Dexec.args="--ticks=100"
 mvn -q exec:java -Dexec.args="--ticks=1000 --report-every=100"
+mvn -q exec:java -Dexec.args="--ticks=500 --no-delay"
+mvn -q exec:java -Dexec.args="--tick-delay-ms=0 --report-every=1"
+mvn -q exec:java -Dexec.args="--config=config/island.yml --ticks=200"
 ```
+
+Справка по флагам: `--help` или `-h`.
 
 Лимит тиков: по умолчанию `500`, иначе первый аргумент-число или `--ticks=N`.  
 Частота промежуточной статистики: `--report-every=N` (по умолчанию `50`).  
-Пауза между тиками берётся из `island.tickDurationMillis`; в отчёте печатается общий баланс и топ-3 вида по численности.
+Пауза между тиками по умолчанию из `island.tickDurationMillis` в YAML; можно переопределить: `--tick-delay-ms=N` или `--no-delay` (эквивалентно нулю). В стартовой строке печатается **фактическая** пауза.  
+Другой YAML с classpath: `--config=путь/к/ресурсу` (по умолчанию `config/island.yml`).
 
 Приложение строит остров из конфига и гоняет `SimulationRunner` до `stopCondition` в YAML (`ALL_ANIMALS_DEAD`, `NO_HERBIVORES`, `NO_PREDATORS`) или до лимита тиков.
 

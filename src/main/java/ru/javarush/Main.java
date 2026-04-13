@@ -25,11 +25,20 @@ public final class Main {
     private static final long DEFAULT_REPORT_EVERY_TICKS = 50L;
 
     public static void main(String[] args) {
-        IslandSimulationConfig config = new IslandConfigLoader().loadDefault();
+        if (shouldPrintHelp(args)) {
+            printUsage();
+            return;
+        }
+
+        IslandSimulationConfig config = loadConfig(args);
         var settings = config.island();
 
         long maxTicks = parseMaxTicks(args);
         long reportEveryTicks = parseReportEveryTicks(args);
+        long tickDelayMillis = parseTickDelayMillis(args, settings.tickDurationMillis());
+        if (tickDelayMillis < 0) {
+            throw new IllegalArgumentException("tick delay must be >= 0 (use --tick-delay-ms=N or --no-delay)");
+        }
         Random random = new Random();
 
         System.out.printf(
@@ -38,7 +47,7 @@ public final class Main {
                 settings.height(),
                 settings.stopCondition().type(),
                 maxTicks,
-                settings.tickDurationMillis());
+                tickDelayMillis);
 
         Island island = new IslandBuilder(random).build(config);
         printSnapshot("Start", island, null);
@@ -48,7 +57,7 @@ public final class Main {
         long executed = new SimulationRunner().runWithExecutionObserver(
                 engine,
                 maxTicks,
-                settings.tickDurationMillis(),
+                tickDelayMillis,
                 reportEveryTicks,
                 (execution, ctx) -> printSnapshot("Tick " + execution.tickNumber(), ctx.island(), execution));
 
@@ -57,6 +66,45 @@ public final class Main {
 
         printSnapshot("Done", island, null);
         System.out.printf("Executed ticks: %d, stop condition met: %b%n", executed, stopMatched);
+    }
+
+    static IslandSimulationConfig loadConfig(String[] args) {
+        String location = parseClasspathConfigLocation(args);
+        if (location == null) {
+            return new IslandConfigLoader().loadDefault();
+        }
+        if (location.isBlank()) {
+            throw new IllegalArgumentException("--config must not be empty (example: --config=config/island.yml)");
+        }
+        return new IslandConfigLoader().loadFromClasspath(location);
+    }
+
+    static boolean shouldPrintHelp(String[] args) {
+        for (String a : args) {
+            if ("--help".equals(a) || "-h".equals(a)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static void printUsage() {
+        System.out.println("""
+                Usage: java -jar ... [OPTIONS] [MAX_TICKS]
+
+                Options:
+                  --ticks=N              Max simulation ticks (default 500)
+                  --report-every=N       Print snapshot every N ticks (default 50)
+                  --tick-delay-ms=N      Pause after each tick in ms (overrides island.tickDurationMillis in YAML)
+                  --no-delay             Same as --tick-delay-ms=0
+                  --config=PATH          Classpath resource for YAML (default: config/island.yml)
+                  -h, --help             Show this message
+
+                Examples:
+                  --ticks=1000 --no-delay
+                  --report-every=1 --tick-delay-ms=0
+                  --config=config/island.yml --ticks=200
+                """);
     }
 
     static long parseMaxTicks(String[] args) {
@@ -78,6 +126,31 @@ public final class Main {
             }
         }
         return DEFAULT_REPORT_EVERY_TICKS;
+    }
+
+    /**
+     * @param configDefault значение из YAML, если CLI не переопределяет паузу
+     */
+    static long parseTickDelayMillis(String[] args, long configDefault) {
+        Long explicit = null;
+        for (String a : args) {
+            if ("--no-delay".equals(a)) {
+                explicit = 0L;
+            } else if (a.startsWith("--tick-delay-ms=")) {
+                explicit = Long.parseLong(a.substring("--tick-delay-ms=".length()));
+            }
+        }
+        return explicit != null ? explicit : configDefault;
+    }
+
+    /** {@code null} — взять дефолтный classpath-ресурс {@link IslandConfigLoader#DEFAULT_CLASSPATH_RESOURCE}. */
+    static String parseClasspathConfigLocation(String[] args) {
+        for (String a : args) {
+            if (a.startsWith("--config=")) {
+                return a.substring("--config=".length());
+            }
+        }
+        return null;
     }
 
     private static void printSnapshot(String title, Island island, TickExecution execution) {
