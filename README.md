@@ -43,6 +43,8 @@ mvn -q exec:java -Dexec.args="--ticks=1000 --report-every=100"
 
 Порядок фаз: **`plantGrowth`** → `movement` → `feeding` → `reproduction` → `death`. Рост растений — `island.plantGrowthChancePercent` (в YAML; иначе дефолт 25), не выше `maxPerLocation` для вида `PLANT` на клетке.
 
+Перед запуском выполняется валидация `island.yml`: размеры/тайминги, диапазоны процентов, ссылки на существующие виды в `initialAnimals` и `dietMatrix`, поддерживаемые `stopCondition`.
+
 Консольная псевдографика и Unicode — позже, см. ТЗ.
 
 ## CI

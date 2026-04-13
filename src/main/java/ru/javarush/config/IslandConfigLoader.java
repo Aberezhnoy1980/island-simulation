@@ -16,9 +16,11 @@ public final class IslandConfigLoader {
     public static final String DEFAULT_CLASSPATH_RESOURCE = "config/island.yml";
 
     private final ObjectMapper yamlMapper;
+    private final IslandConfigValidator validator;
 
     public IslandConfigLoader() {
         this.yamlMapper = new ObjectMapper(new YAMLFactory());
+        this.validator = new IslandConfigValidator();
     }
 
     /**
@@ -28,7 +30,9 @@ public final class IslandConfigLoader {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try (InputStream in = cl.getResourceAsStream(classpathLocation)) {
             Objects.requireNonNull(in, "Resource not found on classpath: " + classpathLocation);
-            return yamlMapper.readValue(in, IslandSimulationConfig.class);
+            IslandSimulationConfig cfg = yamlMapper.readValue(in, IslandSimulationConfig.class);
+            validator.validate(cfg);
+            return cfg;
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to read YAML: " + classpathLocation, e);
         }
