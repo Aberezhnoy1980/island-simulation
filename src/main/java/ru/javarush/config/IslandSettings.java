@@ -20,6 +20,10 @@ public record IslandSettings(
          * Вероятность появления одной новой особи растения на клетке за тик (если ниже лимита вида);
          * {@code null} — дефолт 25 в {@code PlantGrowthService} (пакет simulation).
          */
-        Integer plantGrowthChancePercent
+        Integer plantGrowthChancePercent,
+        /**
+         * Если true, план перемещений в фазе movement строится параллельно (применение плана всё равно последовательно).
+         */
+        Boolean parallelMovementPlanning
 ) {
 }

@@ -100,4 +100,21 @@ class MovementServiceTest {
         movement.relocateMobileOrganisms(island, new Random(888));
         assertEquals(before, island.totalCreatures());
     }
+
+    @Test
+    void parallelPlanningKeepsPopulationCount() {
+        Island island = new Island(30, 30);
+        var rnd = new Random(7);
+        for (int i = 0; i < 500; i++) {
+            var rabbit = new Herbivore(
+                    "rabbit",
+                    new AnimalSettings("Кролик", 2.0, 150, 3, 0.45, "HERBIVORE", null));
+            island.cell(rnd.nextInt(30), rnd.nextInt(30)).add(rabbit);
+        }
+        int before = island.totalCreatures();
+
+        movement.relocateMobileOrganisms(island, new Random(17), true);
+
+        assertEquals(before, island.totalCreatures());
+    }
 }

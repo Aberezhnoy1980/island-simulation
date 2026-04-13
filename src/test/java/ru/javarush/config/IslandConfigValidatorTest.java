@@ -28,7 +28,8 @@ class IslandConfigValidatorTest {
                 Map.of("rabbit", 2),
                 new StopCondition("ALL_ANIMALS_DEAD"),
                 5,
-                30);
+                30,
+                null);
         return new IslandSimulationConfig(
                 island,
                 Map.of("rabbit", rabbit(), "plant", plant()),
@@ -43,7 +44,7 @@ class IslandConfigValidatorTest {
     @Test
     void rejectsUnknownSpeciesInInitialAnimals() {
         IslandSimulationConfig cfg = new IslandSimulationConfig(
-                new IslandSettings(3, 3, 0, Map.of("dragon", 1), new StopCondition("ALL_ANIMALS_DEAD"), 5, 30),
+                new IslandSettings(3, 3, 0, Map.of("dragon", 1), new StopCondition("ALL_ANIMALS_DEAD"), 5, 30, null),
                 Map.of("rabbit", rabbit(), "plant", plant()),
                 Map.of());
 
@@ -55,7 +56,7 @@ class IslandConfigValidatorTest {
     void rejectsInvalidPercentsAndStopCondition() {
         AnimalSettings badRabbit = new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE", 101);
         IslandSimulationConfig cfg = new IslandSimulationConfig(
-                new IslandSettings(3, 3, 0, Map.of(), new StopCondition("SOMETHING_ELSE"), 5, -1),
+                new IslandSettings(3, 3, 0, Map.of(), new StopCondition("SOMETHING_ELSE"), 5, -1, null),
                 Map.of("rabbit", badRabbit, "plant", plant()),
                 Map.of("rabbit", Map.of("plant", 150)));
 
@@ -71,7 +72,7 @@ class IslandConfigValidatorTest {
     void rejectsInvalidAnimalType() {
         AnimalSettings invalidType = new AnimalSettings("X", 1, 1, 0, 0, "ALIEN", null);
         IslandSimulationConfig cfg = new IslandSimulationConfig(
-                new IslandSettings(2, 2, 0, Map.of(), new StopCondition("ALL_ANIMALS_DEAD"), 1, 0),
+                new IslandSettings(2, 2, 0, Map.of(), new StopCondition("ALL_ANIMALS_DEAD"), 1, 0, null),
                 Map.of("x", invalidType),
                 Map.of());
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> validator.validate(cfg));

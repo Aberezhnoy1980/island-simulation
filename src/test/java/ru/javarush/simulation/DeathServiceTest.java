@@ -34,6 +34,7 @@ class DeathServiceTest {
                 Map.of(),
                 new StopCondition("NONE"),
                 maxTicksWithoutFood,
+                null,
                 null);
         return new IslandSimulationConfig(island, animals, diet);
     }

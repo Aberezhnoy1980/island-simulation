@@ -31,7 +31,7 @@ class PlantGrowthServiceTest {
 
     private static IslandSimulationConfig plantOnlyConfig(int growthChance) {
         var plant = new AnimalSettings("Растения", 1.0, 5, 0, 0.0, "PLANT", null);
-        var island = new IslandSettings(3, 3, 500L, Map.of(), new StopCondition("NONE"), null, growthChance);
+        var island = new IslandSettings(3, 3, 500L, Map.of(), new StopCondition("NONE"), null, growthChance, null);
         return new IslandSimulationConfig(island, Map.of("plant", plant), Map.of());
     }
 
@@ -56,7 +56,7 @@ class PlantGrowthServiceTest {
 
     @Test
     void resolvePlantSpeciesIdMissing() {
-        var island = new IslandSettings(2, 2, 500L, Map.of(), new StopCondition("NONE"), null, null);
+        var island = new IslandSettings(2, 2, 500L, Map.of(), new StopCondition("NONE"), null, null, null);
         var cfg = new IslandSimulationConfig(
                 island,
                 Map.of("wolf", new AnimalSettings("Волк", 50, 30, 3, 8, "PREDATOR", null)),

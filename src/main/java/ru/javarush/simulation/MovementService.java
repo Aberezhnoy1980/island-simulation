@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.IntStream;
 
 /**
  * Перемещение животных между клетками за один тик: до {@code speed} шагов, каждый шаг — случайное направление
@@ -20,25 +22,27 @@ public final class MovementService {
     private static final int[] DELTA_COL = {0, 1, 0, -1};
 
     public void relocateMobileOrganisms(Island island, Random random) {
+        relocateMobileOrganisms(island, random, false);
+    }
+
+    public void relocateMobileOrganisms(Island island, Random random, boolean parallelPlanning) {
         Objects.requireNonNull(island, "island");
         Objects.requireNonNull(random, "random");
 
-        List<Relocation> plan = new ArrayList<>();
         int height = island.height();
         int width = island.width();
+        List<Relocation> plan;
 
-        for (int row = 0; row < height; row++) {
-            for (int col = 0; col < width; col++) {
-                Location here = island.cell(row, col);
-                for (Organism organism : here.residentsView()) {
-                    if (!isMobile(organism)) {
-                        continue;
-                    }
-                    Location target = randomWalk(island, row, col, organism.settings().speed(), random);
-                    if (target != here) {
-                        plan.add(new Relocation(organism, here, target));
-                    }
-                }
+        if (parallelPlanning) {
+            plan = IntStream.range(0, height)
+                    .parallel()
+                    .mapToObj(row -> planForRow(island, row, width, true, random))
+                    .flatMap(List::stream)
+                    .toList();
+        } else {
+            plan = new ArrayList<>();
+            for (int row = 0; row < height; row++) {
+                plan.addAll(planForRow(island, row, width, false, random));
             }
         }
 
@@ -46,6 +50,30 @@ public final class MovementService {
             r.from.remove(r.organism);
             r.to.add(r.organism);
         }
+    }
+
+    private static List<Relocation> planForRow(
+            Island island,
+            int row,
+            int width,
+            boolean parallelRandom,
+            Random random
+    ) {
+        List<Relocation> rowPlan = new ArrayList<>();
+        for (int col = 0; col < width; col++) {
+            Location here = island.cell(row, col);
+            for (Organism organism : here.residentsView()) {
+                if (!isMobile(organism)) {
+                    continue;
+                }
+                Random rng = parallelRandom ? ThreadLocalRandom.current() : random;
+                Location target = randomWalk(island, row, col, organism.settings().speed(), rng);
+                if (target != here) {
+                    rowPlan.add(new Relocation(organism, here, target));
+                }
+            }
+        }
+        return rowPlan;
     }
 
     private static boolean isMobile(Organism organism) {
@@ -71,7 +99,6 @@ public final class MovementService {
         }
         return island.cell(r, c);
     }
-
     private record Relocation(Organism organism, Location from, Location to) {
     }
 }
