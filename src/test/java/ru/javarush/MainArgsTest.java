@@ -16,4 +16,10 @@ class MainArgsTest {
     void defaultWhenNoArgs() {
         assertEquals(500L, Main.parseMaxTicks(new String[0]));
     }
+
+    @Test
+    void parsesReportEveryFlag() {
+        assertEquals(25L, Main.parseReportEveryTicks(new String[] {"--report-every=25"}));
+        assertEquals(50L, Main.parseReportEveryTicks(new String[0]));
+    }
 }

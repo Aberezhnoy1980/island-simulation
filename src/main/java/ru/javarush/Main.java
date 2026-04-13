@@ -4,11 +4,13 @@ import ru.javarush.config.IslandConfigLoader;
 import ru.javarush.config.IslandSimulationConfig;
 import ru.javarush.domain.Island;
 import ru.javarush.domain.IslandBuilder;
+import ru.javarush.domain.OrganismKind;
 import ru.javarush.simulation.SimulationContext;
 import ru.javarush.simulation.SimulationEngine;
 import ru.javarush.simulation.SimulationRunner;
 import ru.javarush.simulation.StopConditionEvaluator;
 
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -17,36 +19,41 @@ import java.util.Random;
 public final class Main {
 
     private static final long DEFAULT_MAX_TICKS = 500L;
+    private static final long DEFAULT_REPORT_EVERY_TICKS = 50L;
 
     public static void main(String[] args) {
         IslandSimulationConfig config = new IslandConfigLoader().loadDefault();
         var settings = config.island();
 
         long maxTicks = parseMaxTicks(args);
+        long reportEveryTicks = parseReportEveryTicks(args);
         Random random = new Random();
 
         System.out.printf(
-                "Island %d×%d, stop: %s, max ticks: %d%n",
+                "Island %d×%d, stop: %s, max ticks: %d, tick delay: %d ms%n",
                 settings.width(),
                 settings.height(),
                 settings.stopCondition().type(),
-                maxTicks);
+                maxTicks,
+                settings.tickDurationMillis());
 
         Island island = new IslandBuilder(random).build(config);
-        System.out.printf("Start: total creatures %d%n", island.totalCreatures());
+        printSnapshot("Start", island);
 
         var simulationContext = new SimulationContext(island, config, random);
         var engine = SimulationEngine.withDefaultPhases(simulationContext);
-        long executed = new SimulationRunner().run(engine, maxTicks);
+        long executed = new SimulationRunner().run(
+                engine,
+                maxTicks,
+                settings.tickDurationMillis(),
+                reportEveryTicks,
+                (tick, ctx) -> printSnapshot("Tick " + tick, ctx.island()));
 
         var stopEval = new StopConditionEvaluator();
         boolean stopMatched = stopEval.shouldStop(island, settings.stopCondition());
 
-        System.out.printf(
-                "Done: ticks=%d, creatures=%d, stop condition met=%b%n",
-                executed,
-                island.totalCreatures(),
-                stopMatched);
+        printSnapshot("Done", island);
+        System.out.printf("Executed ticks: %d, stop condition met: %b%n", executed, stopMatched);
     }
 
     static long parseMaxTicks(String[] args) {
@@ -59,5 +66,28 @@ public final class Main {
             return Long.parseLong(args[0]);
         }
         return DEFAULT_MAX_TICKS;
+    }
+
+    static long parseReportEveryTicks(String[] args) {
+        for (String a : args) {
+            if (a.startsWith("--report-every=")) {
+                return Long.parseLong(a.substring("--report-every=".length()));
+            }
+        }
+        return DEFAULT_REPORT_EVERY_TICKS;
+    }
+
+    private static void printSnapshot(String title, Island island) {
+        Map<OrganismKind, Long> byKind = island.totalPopulationByKind();
+        long predators = byKind.getOrDefault(OrganismKind.PREDATOR, 0L);
+        long herbivores = byKind.getOrDefault(OrganismKind.HERBIVORE, 0L);
+        long plants = byKind.getOrDefault(OrganismKind.PLANT, 0L);
+        System.out.printf(
+                "%s => total=%d, predators=%d, herbivores=%d, plants=%d%n",
+                title,
+                island.totalCreatures(),
+                predators,
+                herbivores,
+                plants);
     }
 }

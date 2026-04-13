@@ -32,9 +32,12 @@ java -jar target/Island-simulation-1.0-SNAPSHOT.jar
 mvn -q compile exec:java
 mvn -q exec:java -Dexec.args="2000"
 mvn -q exec:java -Dexec.args="--ticks=100"
+mvn -q exec:java -Dexec.args="--ticks=1000 --report-every=100"
 ```
 
-Лимит тиков: по умолчанию `500`, иначе первый аргумент-число или `--ticks=N`.
+Лимит тиков: по умолчанию `500`, иначе первый аргумент-число или `--ticks=N`.  
+Частота промежуточной статистики: `--report-every=N` (по умолчанию `50`).  
+Пауза между тиками берётся из `island.tickDurationMillis`.
 
 Приложение строит остров из конфига и гоняет `SimulationRunner` до `stopCondition` в YAML (поддержан `ALL_ANIMALS_DEAD`) или до лимита тиков.
 
