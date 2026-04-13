@@ -54,4 +54,17 @@ public abstract class Animal extends Organism {
         }
         foodConsumedThisTick += preyWeightKg;
     }
+
+    /** Животное уже набрало лимит пищи за этот тик. */
+    public boolean isFullySatiatedThisTick() {
+        return foodConsumedThisTick >= settings().maxFoodKg() - KG_EPS;
+    }
+
+    /**
+     * Жертва съедена целиком, но масса больше, чем помещалось в остаток лимита за тик:
+     * считаем, что охотник насыщается до {@code maxFoodKg} (типично — кролик и «тяжёлое» растение).
+     */
+    public void saturateAfterEatingEntireOversizedPrey() {
+        foodConsumedThisTick = settings().maxFoodKg();
+    }
 }

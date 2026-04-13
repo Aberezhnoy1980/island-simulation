@@ -15,12 +15,12 @@ import java.util.Random;
 
 /**
  * Питание на клетке: для каждого животного (в случайном порядке) читается строка {@code dietMatrix},
- * по вероятности {@code 0..100} (успех, если {@code nextInt(100) < chance}) съедается жертва с клетки,
- * пока хватает {@code maxFoodKg}. Растения не охотятся.
+ * по вероятности {@code 0..100} (успех, если {@code nextInt(100) < chance}) съедается жертва с клетки.
+ * Растения не охотятся.
  * <p>
- * Жертва съедается целиком: если {@code prey.weightKg} больше остатка до {@code maxFoodKg}, эта жертва
- * пропускается (частичное поедание одной особи пока не моделируется). При необходимости в YAML подбирают
- * вес «порции» растения или поднимают лимит у травоядного.
+ * Жертва всегда исчезает с клетки целиком. Если её масса помещается в остаток лимита за тик — учёт по весу;
+ * если масса больше (например растение 1&nbsp;кг при лимите кролика 0.45&nbsp;кг) — охотник всё равно
+ * насыщается до {@code maxFoodKg} за тик, «недоеденных огрызков» нет.
  */
 public final class FeedingService {
 
@@ -73,11 +73,14 @@ public final class FeedingService {
     }
 
     /**
-     * Одна попытка: перебираются кандидаты в случайном порядке; при успешном броске и влезании по весу жертва удаляется.
+     * Одна попытка: перебираются кандидаты в случайном порядке; при успешном броске жертва снимается с клетки.
      *
      * @return {@code true}, если съели одну жертву
      */
     private boolean tryEatOneMeal(Location cell, Animal hunter, Map<String, Integer> diet, Random random) {
+        if (hunter.isFullySatiatedThisTick()) {
+            return false;
+        }
         List<Organism> candidates = new ArrayList<>();
         for (Organism prey : cell.residentsView()) {
             if (prey == hunter) {
@@ -100,10 +103,11 @@ public final class FeedingService {
                 continue;
             }
             double preyKg = prey.settings().weightKg();
-            if (!hunter.canConsumePreyWeight(preyKg)) {
-                continue;
+            if (hunter.canConsumePreyWeight(preyKg)) {
+                hunter.registerMeal(preyKg);
+            } else {
+                hunter.saturateAfterEatingEntireOversizedPrey();
             }
-            hunter.registerMeal(preyKg);
             cell.remove(prey);
             return true;
         }

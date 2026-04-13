@@ -20,8 +20,8 @@ class ReproductionServiceTest {
     private final ReproductionService reproduction = new ReproductionService();
 
     private static IslandSimulationConfig rabbitAndPlants(int maxPerLocation, Integer reproChance) {
-        // maxFoodKg чуть выше одной «порции» растения — за тик кролик съедает максимум одно растение
-        var rabbit = new AnimalSettings("Кролик", 2.0, maxPerLocation, 2, 0.12, "HERBIVORE", reproChance);
+        // Ровно одна порция растения за тик на кролика (иначе второе съедалось бы как «крупная» жертва)
+        var rabbit = new AnimalSettings("Кролик", 2.0, maxPerLocation, 2, 0.1, "HERBIVORE", reproChance);
         var plant = new AnimalSettings("Растения", 0.1, 200, 0, 0.0, "PLANT", null);
         var animals = Map.of("rabbit", rabbit, "plant", plant);
         var diet = Map.of("rabbit", Map.of("plant", 100));

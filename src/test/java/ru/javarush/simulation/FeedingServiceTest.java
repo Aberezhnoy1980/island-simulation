@@ -10,7 +10,6 @@ import ru.javarush.domain.Island;
 import ru.javarush.domain.Plant;
 import ru.javarush.domain.Predator;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -107,12 +106,12 @@ class FeedingServiceTest {
     }
 
     @Test
-    void herbivoreEatsPlant() {
+    void herbivoreEatsHeavyPlantAndSaturatesToMax() {
         var animals = Map.of(
                 "rabbit",
                 new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE", null),
                 "plant",
-                new AnimalSettings("Растения", 0.2, 200, 0, 0.0, "PLANT", null));
+                new AnimalSettings("Растения", 1.0, 200, 0, 0.0, "PLANT", null));
         var diet = Map.of("rabbit", Map.of("plant", 100));
         IslandSimulationConfig cfg = minimalConfig(animals, diet);
 
@@ -126,7 +125,7 @@ class FeedingServiceTest {
 
         assertEquals(1, island.cell(0, 0).totalCreatures());
         assertTrue(island.cell(0, 0).residentsView().contains(rabbit));
-        assertEquals(0.2, rabbit.foodConsumedThisTick(), 1e-6);
+        assertEquals(0.45, rabbit.foodConsumedThisTick(), 1e-6);
     }
 
     @Test
@@ -152,29 +151,23 @@ class FeedingServiceTest {
     }
 
     @Test
-    void skipsPreyTooHeavyForRemainingCapacity() {
-        var animals = new HashMap<String, AnimalSettings>();
-        animals.put(
+    void predatorSaturatesWhenPreyHeavierThanMaxFoodPerTick() {
+        var animals = Map.of(
                 "wolf",
-                new AnimalSettings("Волк", 50.0, 30, 3, 2.0, "PREDATOR", null));
-        animals.put("deer", new AnimalSettings("Олень", 300.0, 20, 4, 50.0, "HERBIVORE", null));
-        animals.put("mouse", new AnimalSettings("Мышь", 0.05, 500, 1, 0.01, "HERBIVORE", null));
-        var diet = Map.of(
-                "wolf",
-                Map.of(
-                        "deer", 100,
-                        "mouse", 100));
+                new AnimalSettings("Волк", 50.0, 30, 3, 2.0, "PREDATOR", null),
+                "deer",
+                new AnimalSettings("Олень", 300.0, 20, 4, 50.0, "HERBIVORE", null));
+        var diet = Map.of("wolf", Map.of("deer", 100));
         IslandSimulationConfig cfg = minimalConfig(animals, diet);
 
         Island island = new Island(2, 2);
         var wolf = new Predator("wolf", animals.get("wolf"));
         island.cell(0, 0).add(wolf);
         island.cell(0, 0).add(new Herbivore("deer", animals.get("deer")));
-        island.cell(0, 0).add(new Herbivore("mouse", animals.get("mouse")));
 
         feeding.feedAll(island, cfg, alwaysWinRoll());
 
-        assertEquals(2, island.cell(0, 0).totalCreatures());
-        assertEquals(0.05, wolf.foodConsumedThisTick(), 1e-6);
+        assertEquals(1, island.cell(0, 0).totalCreatures());
+        assertEquals(2.0, wolf.foodConsumedThisTick(), 1e-6);
     }
 }
