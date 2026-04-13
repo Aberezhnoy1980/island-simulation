@@ -15,6 +15,11 @@ public record IslandSettings(
         Map<String, Integer> initialAnimals,
         StopCondition stopCondition,
         /** Сколько полных тиков подряд без еды переносит животное; {@code null} — взять дефолт движка симуляции. */
-        Integer maxTicksWithoutFood
+        Integer maxTicksWithoutFood,
+        /**
+         * Вероятность появления одной новой особи растения на клетке за тик (если ниже лимита вида);
+         * {@code null} — дефолт 25 в {@code PlantGrowthService} (пакет simulation).
+         */
+        Integer plantGrowthChancePercent
 ) {
 }

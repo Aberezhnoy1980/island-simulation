@@ -30,13 +30,17 @@ java -jar target/Island-simulation-1.0-SNAPSHOT.jar
 
 ```bash
 mvn -q compile exec:java
+mvn -q exec:java -Dexec.args="2000"
+mvn -q exec:java -Dexec.args="--ticks=100"
 ```
 
-Приложение загружает конфиг, строит сетку (`Island` / `Location`), создаёт организмы через `OrganismFactory` (`Predator` / `Herbivore` / `Plant`) и раскладывает стартовые популяции по клеткам. Движок `SimulationEngine` выполняет тик как цепочку фаз (`movement` → `feeding` → `reproduction` → `death`). Фаза `movement` раскидывает животных по сетке (до `speed` шагов в случайных направлениях, у границ шаг сбрасывается); растения и виды с `speed: 0` стоят на месте. Фаза `feeding` использует `dietMatrix` (успех при `random.nextInt(100) < chance`) и `maxFoodKg` за тик. Фаза `reproduction`: на клетке, если есть ≥2 сытных особей одного вида (за тик было питание), не достигнут `maxPerLocation` и выпал шанс `reproductionChancePercent` из YAML (иначе 15%), добавляется один детёныш через `OrganismFactory`. Растения не размножаются в этой фазе.
+Лимит тиков: по умолчанию `500`, иначе первый аргумент-число или `--ticks=N`.
 
-Фаза `death` увеличивает счётчик голода у животных, если за тик ничего не съели, и удаляет тех, у кого `ticksWithoutFood >= island.maxTicksWithoutFood` (в YAML; иначе дефолт 10). Растения не голодают.
+Приложение строит остров из конфига и гоняет `SimulationRunner` до `stopCondition` в YAML (поддержан `ALL_ANIMALS_DEAD`) или до лимита тиков.
 
-Консольная псевдографика и Unicode-символы по видам — позже, см. ТЗ (раздел про UI); в коде удобнее держать отображение отдельно от домена.
+Порядок фаз: **`plantGrowth`** → `movement` → `feeding` → `reproduction` → `death`. Рост растений — `island.plantGrowthChancePercent` (в YAML; иначе дефолт 25), не выше `maxPerLocation` для вида `PLANT` на клетке.
+
+Консольная псевдографика и Unicode — позже, см. ТЗ.
 
 ## CI
 

@@ -4,56 +4,60 @@ import ru.javarush.config.IslandConfigLoader;
 import ru.javarush.config.IslandSimulationConfig;
 import ru.javarush.domain.Island;
 import ru.javarush.domain.IslandBuilder;
-import ru.javarush.domain.OrganismKind;
 import ru.javarush.simulation.SimulationContext;
 import ru.javarush.simulation.SimulationEngine;
+import ru.javarush.simulation.SimulationRunner;
+import ru.javarush.simulation.StopConditionEvaluator;
 
 import java.util.Random;
 
 /**
- * Точка входа: загрузка конфигурации, построение острова, краткая сводка.
+ * Точка входа: загрузка конфига, построение острова, цикл симуляции до стоп-условия или лимита тиков.
  */
 public final class Main {
 
+    private static final long DEFAULT_MAX_TICKS = 500L;
+
     public static void main(String[] args) {
         IslandSimulationConfig config = new IslandConfigLoader().loadDefault();
-
         var settings = config.island();
+
+        long maxTicks = parseMaxTicks(args);
+        Random random = new Random();
+
         System.out.printf(
-                "Island %d×%d, tick %d ms, stop: %s%n",
+                "Island %d×%d, stop: %s, max ticks: %d%n",
                 settings.width(),
                 settings.height(),
-                settings.tickDurationMillis(),
-                settings.stopCondition().type());
+                settings.stopCondition().type(),
+                maxTicks);
 
-        Island island = new IslandBuilder(new Random()).build(config);
+        Island island = new IslandBuilder(random).build(config);
+        System.out.printf("Start: total creatures %d%n", island.totalCreatures());
 
-        System.out.printf("Cells: %d, total creatures on map: %d%n",
-                settings.width() * settings.height(),
-                island.totalCreatures());
-
-        var totals = island.totalPopulationBySpecies();
-        System.out.printf("Species tracked on island: %d (config defines %d kinds)%n",
-                totals.size(),
-                config.animals().size());
-
-        long predatorsInConfig = config.animals().values().stream()
-                .filter(s -> OrganismKind.PREDATOR.name().equalsIgnoreCase(s.type()))
-                .count();
-        System.out.printf("Predator species in config: %d; sample cell (0,0) population: %d%n",
-                predatorsInConfig,
-                island.cell(0, 0).totalCreatures());
-
-        var random = new Random();
         var simulationContext = new SimulationContext(island, config, random);
         var engine = SimulationEngine.withDefaultPhases(simulationContext);
-        int demoTicks = 3;
-        for (int i = 0; i < demoTicks; i++) {
-            engine.tick();
-        }
+        long executed = new SimulationRunner().run(engine, maxTicks);
+
+        var stopEval = new StopConditionEvaluator();
+        boolean stopMatched = stopEval.shouldStop(island, settings.stopCondition());
+
         System.out.printf(
-                "Demo simulation: %d ticks (full lifecycle except plant growth). Total creatures: %d%n",
-                demoTicks,
-                island.totalCreatures());
+                "Done: ticks=%d, creatures=%d, stop condition met=%b%n",
+                executed,
+                island.totalCreatures(),
+                stopMatched);
+    }
+
+    static long parseMaxTicks(String[] args) {
+        for (String a : args) {
+            if (a.startsWith("--ticks=")) {
+                return Long.parseLong(a.substring("--ticks=".length()));
+            }
+        }
+        if (args.length > 0 && !args[0].startsWith("-")) {
+            return Long.parseLong(args[0]);
+        }
+        return DEFAULT_MAX_TICKS;
     }
 }

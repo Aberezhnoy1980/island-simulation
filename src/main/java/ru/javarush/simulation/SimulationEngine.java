@@ -12,6 +12,7 @@ public final class SimulationEngine {
         return new SimulationEngine(
                 context,
                 List.of(
+                        new PlantGrowthPhase(),
                         new MovementPhase(),
                         new FeedingPhase(),
                         new ReproductionPhase(),

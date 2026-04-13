@@ -19,6 +19,7 @@ island:
     duck: 200
     caterpillar: 1000
   maxTicksWithoutFood: 5
+  plantGrowthChancePercent: 30
   stopCondition:
     type: ALL_ANIMALS_DEAD
 

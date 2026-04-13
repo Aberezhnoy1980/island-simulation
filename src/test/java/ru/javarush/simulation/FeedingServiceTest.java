@@ -56,6 +56,7 @@ class FeedingServiceTest {
                 500L,
                 Map.of(),
                 new StopCondition("NONE"),
+                null,
                 null);
         return new IslandSimulationConfig(island, animals, diet);
     }

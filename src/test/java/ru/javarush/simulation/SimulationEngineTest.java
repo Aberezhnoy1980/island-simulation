@@ -34,14 +34,14 @@ class SimulationEngineTest {
     }
 
     @Test
-    void defaultEngineHasFourPhasesInOrder() {
+    void defaultEnginePhasesOrder() {
         var cfg = new IslandConfigLoader().loadDefault();
         Island island = new IslandBuilder(new Random(0)).build(cfg);
         var ctx = new SimulationContext(island, cfg, new Random(0));
         var engine = SimulationEngine.withDefaultPhases(ctx);
 
         assertEquals(
-                List.of("movement", "feeding", "reproduction", "death"),
+                List.of("plantGrowth", "movement", "feeding", "reproduction", "death"),
                 engine.phasesView().stream().map(LifecyclePhase::id).toList());
     }
 
