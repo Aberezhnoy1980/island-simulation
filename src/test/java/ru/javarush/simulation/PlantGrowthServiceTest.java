@@ -63,4 +63,21 @@ class PlantGrowthServiceTest {
                 Map.of());
         assertNull(PlantGrowthService.resolvePlantSpeciesId(cfg));
     }
+
+    @Test
+    void parallelPlanningRespectsCapacityPerCell() {
+        IslandSimulationConfig cfg = plantOnlyConfig(100);
+        Island island = new Island(6, 6);
+
+        for (int i = 0; i < 20; i++) {
+            growth.grow(island, cfg, new Random(i), true);
+        }
+
+        int cap = cfg.animals().get("plant").maxPerLocation();
+        for (int row = 0; row < island.height(); row++) {
+            for (int col = 0; col < island.width(); col++) {
+                assertEquals(cap, island.cell(row, col).countOf("plant"));
+            }
+        }
+    }
 }

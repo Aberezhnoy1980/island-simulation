@@ -14,6 +14,7 @@ public final class PlantGrowthPhase implements LifecyclePhase {
 
     @Override
     public void execute(SimulationContext context) {
-        plantGrowthService.grow(context.island(), context.config(), context.random());
+        boolean parallelPlanning = Boolean.TRUE.equals(context.config().island().parallelMovementPlanning());
+        plantGrowthService.grow(context.island(), context.config(), context.random(), parallelPlanning);
     }
 }
