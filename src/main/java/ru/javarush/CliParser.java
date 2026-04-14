@@ -21,7 +21,7 @@ public final class CliParser {
 
     public static CliOptions parse(String[] args) {
         if (shouldPrintHelp(args)) {
-            return new CliOptions(true, DEFAULT_MAX_TICKS, DEFAULT_REPORT_EVERY_TICKS, null, null, null, null);
+            return new CliOptions(true, false, DEFAULT_MAX_TICKS, DEFAULT_REPORT_EVERY_TICKS, null, null, null, null);
         }
         validateArgs(args);
         String stop = parseStopConditionType(args);
@@ -30,6 +30,7 @@ public final class CliParser {
         }
         return new CliOptions(
                 false,
+                parseScheduledMode(args),
                 parseMaxTicks(args),
                 parseReportEveryTicks(args),
                 parseTickDelayOverrideMillis(args),
@@ -48,6 +49,7 @@ public final class CliParser {
                   --report-every=N       Print snapshot every N ticks (default 50)
                   --tick-delay-ms=N      Pause after each tick in ms (overrides island.tickDurationMillis in YAML)
                   --no-delay             Same as --tick-delay-ms=0
+                  --scheduled            Run ticks via ScheduledExecutorService (single-thread scheduled mode)
                   --seed=N               Deterministic random seed for reproducible runs
                   --stop=TYPE            Override stop condition (ALL_ANIMALS_DEAD|NO_HERBIVORES|NO_PREDATORS)
                   --config=PATH          YAML file path or classpath resource (default: config/island.yml)
@@ -55,6 +57,7 @@ public final class CliParser {
 
                 Examples:
                   --ticks=1000 --no-delay
+                  --scheduled --tick-delay-ms=10 --report-every=1
                   --ticks=500 --seed=42 --no-delay
                   --stop=NO_HERBIVORES --report-every=1
                   --report-every=1 --tick-delay-ms=0
@@ -97,6 +100,7 @@ public final class CliParser {
         return "--help".equals(arg)
                 || "-h".equals(arg)
                 || "--no-delay".equals(arg)
+                || "--scheduled".equals(arg)
                 || arg.startsWith("--ticks=")
                 || arg.startsWith("--report-every=")
                 || arg.startsWith("--tick-delay-ms=")
@@ -148,6 +152,15 @@ public final class CliParser {
             }
         }
         return seed;
+    }
+
+    static boolean parseScheduledMode(String[] args) {
+        for (String a : args) {
+            if ("--scheduled".equals(a)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static String parseStopConditionType(String[] args) {

@@ -36,6 +36,7 @@ mvn -q exec:java -Dexec.args="--ticks=1000 --report-every=100"
 mvn -q exec:java -Dexec.args="--ticks=500 --no-delay"
 mvn -q exec:java -Dexec.args="--ticks=500 --seed=42 --no-delay"
 mvn -q exec:java -Dexec.args="--stop=NO_HERBIVORES --report-every=1"
+mvn -q exec:java -Dexec.args="--scheduled --tick-delay-ms=10 --report-every=1"
 mvn -q exec:java -Dexec.args="--tick-delay-ms=0 --report-every=1"
 mvn -q exec:java -Dexec.args="--config=config/island.yml --ticks=200"
 ```
@@ -45,6 +46,7 @@ mvn -q exec:java -Dexec.args="--config=config/island.yml --ticks=200"
 Лимит тиков: по умолчанию `500`, иначе первый аргумент-число или `--ticks=N`.  
 Частота промежуточной статистики: `--report-every=N` (по умолчанию `50`).  
 Пауза между тиками по умолчанию из `island.tickDurationMillis` в YAML; можно переопределить: `--tick-delay-ms=N` или `--no-delay` (эквивалентно нулю). В стартовой строке печатается **фактическая** пауза.  
+`--scheduled` переключает запуск на `ScheduledExecutorService` (single-thread scheduled mode).  
 `--seed=N` делает прогон воспроизводимым: при одинаковом конфиге и аргументах результат будет повторяться.  
 `--stop=TYPE` переопределяет stop condition из YAML для текущего запуска (`ALL_ANIMALS_DEAD`, `NO_HERBIVORES`, `NO_PREDATORS`).  
 `--config`: путь к **файлу** на диске (если файл существует — читается он) или имя **classpath**-ресурса, например `config/island.yml` (по умолчанию при отсутствии флага).

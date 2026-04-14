@@ -70,6 +70,12 @@ class MainArgsTest {
     }
 
     @Test
+    void parsesScheduledFlag() {
+        assertFalse(CliParser.parse(new String[0]).scheduledMode());
+        assertTrue(CliParser.parse(new String[] {"--scheduled"}).scheduledMode());
+    }
+
+    @Test
     void parsesStopOverrideFlag() {
         assertNull(CliParser.parse(new String[0]).stopConditionType());
         assertEquals("NO_HERBIVORES", CliParser.parse(new String[] {"--stop=no_herbivores"}).stopConditionType());
@@ -113,6 +119,7 @@ class MainArgsTest {
                 "--ticks=100",
                 "--report-every=10",
                 "--tick-delay-ms=0",
+                "--scheduled",
                 "--seed=42",
                 "--stop=ALL_ANIMALS_DEAD",
                 "--config=config/island.yml",

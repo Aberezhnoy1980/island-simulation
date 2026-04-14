@@ -10,6 +10,7 @@ import ru.javarush.domain.OrganismKind;
 import ru.javarush.simulation.SimulationContext;
 import ru.javarush.simulation.SimulationEngine;
 import ru.javarush.simulation.SimulationRunner;
+import ru.javarush.simulation.ScheduledSimulationRunner;
 import ru.javarush.simulation.StopConditionEvaluator;
 import ru.javarush.simulation.TickExecution;
 
@@ -36,25 +37,40 @@ public final class Main {
         Random random = options.seed() != null ? new Random(options.seed()) : new Random();
 
         System.out.printf(
-                "Island %d×%d, stop: %s, max ticks: %d, tick delay: %d ms, seed: %s%n",
+                "Island %d×%d, stop: %s, max ticks: %d, tick delay: %d ms, seed: %s, mode: %s%n",
                 settings.width(),
                 settings.height(),
                 settings.stopCondition().type(),
                 options.maxTicks(),
                 tickDelayMillis,
-                options.seed() != null ? options.seed() : "random");
+                options.seed() != null ? options.seed() : "random",
+                options.scheduledMode() ? "scheduled" : "loop");
 
         Island island = new IslandBuilder(random).build(config);
         printSnapshot("Start", island, null);
 
         var simulationContext = new SimulationContext(island, config, random);
         var engine = SimulationEngine.withDefaultPhases(simulationContext);
-        long executed = new SimulationRunner().runWithExecutionObserver(
-                engine,
-                options.maxTicks(),
-                tickDelayMillis,
-                options.reportEveryTicks(),
-                (execution, ctx) -> printSnapshot("Tick " + execution.tickNumber(), ctx.island(), execution));
+        long executed;
+        if (options.scheduledMode()) {
+            long periodMillis = Math.max(1L, tickDelayMillis);
+            if (tickDelayMillis == 0L) {
+                System.out.println("Scheduled mode: tick delay 0ms adjusted to 1ms period.");
+            }
+            executed = new ScheduledSimulationRunner().runWithExecutionObserver(
+                    engine,
+                    options.maxTicks(),
+                    periodMillis,
+                    options.reportEveryTicks(),
+                    (execution, ctx) -> printSnapshot("Tick " + execution.tickNumber(), ctx.island(), execution));
+        } else {
+            executed = new SimulationRunner().runWithExecutionObserver(
+                    engine,
+                    options.maxTicks(),
+                    tickDelayMillis,
+                    options.reportEveryTicks(),
+                    (execution, ctx) -> printSnapshot("Tick " + execution.tickNumber(), ctx.island(), execution));
+        }
 
         var stopEval = new StopConditionEvaluator();
         boolean stopMatched = stopEval.shouldStop(island, settings.stopCondition());
