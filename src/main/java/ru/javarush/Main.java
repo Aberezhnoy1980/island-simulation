@@ -29,6 +29,7 @@ public final class Main {
             printUsage();
             return;
         }
+        validateArgs(args);
 
         IslandSimulationConfig config = loadConfig(args);
         var settings = config.island();
@@ -88,6 +89,38 @@ public final class Main {
             }
         }
         return false;
+    }
+
+    static void validateArgs(String[] args) {
+        int positionalCount = 0;
+        for (String a : args) {
+            if (a.startsWith("-")) {
+                if (!isSupportedOption(a)) {
+                    throw new IllegalArgumentException("Unknown option: " + a + " (use --help)");
+                }
+                continue;
+            }
+            positionalCount++;
+            if (positionalCount > 1) {
+                throw new IllegalArgumentException("Only one positional MAX_TICKS argument is allowed");
+            }
+            try {
+                Long.parseLong(a);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid positional MAX_TICKS value: " + a, e);
+            }
+        }
+    }
+
+    private static boolean isSupportedOption(String arg) {
+        return "--help".equals(arg)
+                || "-h".equals(arg)
+                || "--no-delay".equals(arg)
+                || arg.startsWith("--ticks=")
+                || arg.startsWith("--report-every=")
+                || arg.startsWith("--tick-delay-ms=")
+                || arg.startsWith("--seed=")
+                || arg.startsWith("--config=");
     }
 
     static void printUsage() {

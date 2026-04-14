@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -101,5 +102,27 @@ class MainArgsTest {
     @Test
     void loadConfigBlankPathThrows() {
         assertThrows(IllegalArgumentException.class, () -> Main.loadConfig(new String[] {"--config="}));
+    }
+
+    @Test
+    void validateArgsAcceptsKnownFlagsAndSinglePositional() {
+        assertDoesNotThrow(() -> Main.validateArgs(new String[] {
+                "--ticks=100",
+                "--report-every=10",
+                "--tick-delay-ms=0",
+                "--seed=42",
+                "--config=config/island.yml",
+                "200"
+        }));
+    }
+
+    @Test
+    void validateArgsRejectsUnknownOption() {
+        assertThrows(IllegalArgumentException.class, () -> Main.validateArgs(new String[] {"--unknown=1"}));
+    }
+
+    @Test
+    void validateArgsRejectsMoreThanOnePositionalArgument() {
+        assertThrows(IllegalArgumentException.class, () -> Main.validateArgs(new String[] {"100", "200"}));
     }
 }
