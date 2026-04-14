@@ -2,6 +2,8 @@ package ru.javarush;
 
 import ru.javarush.config.IslandConfigLoader;
 import ru.javarush.config.IslandSimulationConfig;
+import ru.javarush.config.IslandSettings;
+import ru.javarush.config.StopCondition;
 import ru.javarush.domain.Island;
 import ru.javarush.domain.IslandBuilder;
 import ru.javarush.domain.OrganismKind;
@@ -15,6 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Точка входа: загрузка конфига, построение острова, цикл симуляции до стоп-условия или лимита тиков.
@@ -23,6 +26,10 @@ public final class Main {
 
     private static final long DEFAULT_MAX_TICKS = 500L;
     private static final long DEFAULT_REPORT_EVERY_TICKS = 50L;
+    private static final Set<String> SUPPORTED_STOP_CONDITIONS = Set.of(
+            "ALL_ANIMALS_DEAD",
+            "NO_HERBIVORES",
+            "NO_PREDATORS");
 
     public static void main(String[] args) {
         if (shouldPrintHelp(args)) {
@@ -31,7 +38,7 @@ public final class Main {
         }
         validateArgs(args);
 
-        IslandSimulationConfig config = loadConfig(args);
+        IslandSimulationConfig config = applyCliOverrides(loadConfig(args), args);
         var settings = config.island();
 
         long maxTicks = parseMaxTicks(args);
@@ -82,6 +89,29 @@ public final class Main {
         return new IslandConfigLoader().load(location);
     }
 
+    static IslandSimulationConfig applyCliOverrides(IslandSimulationConfig config, String[] args) {
+        String stopOverride = parseStopConditionType(args);
+        if (stopOverride == null) {
+            return config;
+        }
+        if (!SUPPORTED_STOP_CONDITIONS.contains(stopOverride)) {
+            throw new IllegalArgumentException(
+                    "--stop must be one of " + SUPPORTED_STOP_CONDITIONS + ", got: " + stopOverride);
+        }
+        var island = config.island();
+        var overriddenIsland = new IslandSettings(
+                island.width(),
+                island.height(),
+                island.tickDurationMillis(),
+                island.initialAnimals(),
+                new StopCondition(stopOverride),
+                island.maxTicksWithoutFood(),
+                island.plantGrowthChancePercent(),
+                island.parallelMovementPlanning(),
+                island.parallelPlantGrowthPlanning());
+        return new IslandSimulationConfig(overriddenIsland, config.animals(), config.dietMatrix());
+    }
+
     static boolean shouldPrintHelp(String[] args) {
         for (String a : args) {
             if ("--help".equals(a) || "-h".equals(a)) {
@@ -120,6 +150,7 @@ public final class Main {
                 || arg.startsWith("--report-every=")
                 || arg.startsWith("--tick-delay-ms=")
                 || arg.startsWith("--seed=")
+                || arg.startsWith("--stop=")
                 || arg.startsWith("--config=");
     }
 
@@ -133,12 +164,14 @@ public final class Main {
                   --tick-delay-ms=N      Pause after each tick in ms (overrides island.tickDurationMillis in YAML)
                   --no-delay             Same as --tick-delay-ms=0
                   --seed=N               Deterministic random seed for reproducible runs
+                  --stop=TYPE            Override stop condition (ALL_ANIMALS_DEAD|NO_HERBIVORES|NO_PREDATORS)
                   --config=PATH          YAML file path or classpath resource (default: config/island.yml)
                   -h, --help             Show this message
 
                 Examples:
                   --ticks=1000 --no-delay
                   --ticks=500 --seed=42 --no-delay
+                  --stop=NO_HERBIVORES --report-every=1
                   --report-every=1 --tick-delay-ms=0
                   --config=config/island.yml --ticks=200
                   --config=/tmp/my-island.yml
@@ -190,6 +223,20 @@ public final class Main {
             }
         }
         return seed;
+    }
+
+    /** {@code null} — stop condition не переопределяется через CLI. */
+    static String parseStopConditionType(String[] args) {
+        String stop = null;
+        for (String a : args) {
+            if (a.startsWith("--stop=")) {
+                stop = a.substring("--stop=".length()).trim().toUpperCase();
+            }
+        }
+        if (stop == null || stop.isBlank()) {
+            return null;
+        }
+        return stop;
     }
 
     /** {@code null} — взять дефолтный classpath-ресурс {@link IslandConfigLoader#DEFAULT_CLASSPATH_RESOURCE}. */

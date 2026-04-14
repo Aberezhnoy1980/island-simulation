@@ -2,6 +2,7 @@ package ru.javarush;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import ru.javarush.config.StopCondition;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -73,6 +74,12 @@ class MainArgsTest {
     }
 
     @Test
+    void parsesStopOverrideFlag() {
+        assertNull(Main.parseStopConditionType(new String[0]));
+        assertEquals("NO_HERBIVORES", Main.parseStopConditionType(new String[] {"--stop=no_herbivores"}));
+    }
+
+    @Test
     void configLocationFlag() {
         assertNull(Main.parseConfigLocation(new String[0]));
         assertEquals("config/island.yml", Main.parseConfigLocation(new String[] {"--config=config/island.yml"}));
@@ -111,6 +118,7 @@ class MainArgsTest {
                 "--report-every=10",
                 "--tick-delay-ms=0",
                 "--seed=42",
+                "--stop=ALL_ANIMALS_DEAD",
                 "--config=config/island.yml",
                 "200"
         }));
@@ -124,5 +132,18 @@ class MainArgsTest {
     @Test
     void validateArgsRejectsMoreThanOnePositionalArgument() {
         assertThrows(IllegalArgumentException.class, () -> Main.validateArgs(new String[] {"100", "200"}));
+    }
+
+    @Test
+    void applyCliOverridesReplacesStopCondition() {
+        var cfg = Main.loadConfig(new String[0]);
+        var overridden = Main.applyCliOverrides(cfg, new String[] {"--stop=NO_PREDATORS"});
+        assertEquals(new StopCondition("NO_PREDATORS"), overridden.island().stopCondition());
+    }
+
+    @Test
+    void applyCliOverridesRejectsUnsupportedStopCondition() {
+        var cfg = Main.loadConfig(new String[0]);
+        assertThrows(IllegalArgumentException.class, () -> Main.applyCliOverrides(cfg, new String[] {"--stop=NONE"}));
     }
 }
