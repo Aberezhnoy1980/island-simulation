@@ -26,9 +26,6 @@ public final class IslandConfigLoader {
     }
 
     /**
-     * Читает конфиг из classpath (например {@code config/island.yml}).
-     */
-    /**
      * Сначала пробует обычный файл по пути {@code location}; если такого файла нет — classpath.
      */
     public IslandSimulationConfig load(String location) {

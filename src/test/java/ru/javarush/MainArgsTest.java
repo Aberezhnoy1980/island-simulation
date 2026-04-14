@@ -22,67 +22,63 @@ class MainArgsTest {
 
     @Test
     void parsesTicksFlagAndPositional() {
-        assertEquals(100L, Main.parseMaxTicks(new String[] {"--ticks=100"}));
-        assertEquals(42L, Main.parseMaxTicks(new String[] {"42"}));
+        assertEquals(100L, CliParser.parse(new String[] {"--ticks=100"}).maxTicks());
+        assertEquals(42L, CliParser.parse(new String[] {"42"}).maxTicks());
     }
 
     @Test
     void defaultWhenNoArgs() {
-        assertEquals(500L, Main.parseMaxTicks(new String[0]));
+        assertEquals(CliParser.DEFAULT_MAX_TICKS, CliParser.parse(new String[0]).maxTicks());
     }
 
     @Test
     void parsesReportEveryFlag() {
-        assertEquals(25L, Main.parseReportEveryTicks(new String[] {"--report-every=25"}));
-        assertEquals(50L, Main.parseReportEveryTicks(new String[0]));
+        assertEquals(25L, CliParser.parse(new String[] {"--report-every=25"}).reportEveryTicks());
+        assertEquals(CliParser.DEFAULT_REPORT_EVERY_TICKS, CliParser.parse(new String[0]).reportEveryTicks());
     }
 
     @Test
-    void parsesTickDelayFromYamlWhenNoFlags() {
-        assertEquals(500L, Main.parseTickDelayMillis(new String[0], 500L));
+    void tickDelayOverrideUnsetWhenNoFlags() {
+        assertNull(CliParser.parse(new String[0]).tickDelayOverrideMillis());
     }
 
     @Test
     void noDelayOverridesYaml() {
-        assertEquals(0L, Main.parseTickDelayMillis(new String[] {"--no-delay"}, 500L));
+        assertEquals(0L, CliParser.parse(new String[] {"--no-delay"}).tickDelayOverrideMillis());
     }
 
     @Test
     void tickDelayMsOverridesYaml() {
-        assertEquals(12L, Main.parseTickDelayMillis(new String[] {"--tick-delay-ms=12"}, 500L));
+        assertEquals(12L, CliParser.parse(new String[] {"--tick-delay-ms=12"}).tickDelayOverrideMillis());
     }
 
     @Test
     void lastTickDelayFlagWins() {
-        assertEquals(0L, Main.parseTickDelayMillis(
-                new String[] {"--tick-delay-ms=100", "--no-delay"},
-                500L));
-        assertEquals(7L, Main.parseTickDelayMillis(
-                new String[] {"--no-delay", "--tick-delay-ms=7"},
-                500L));
+        assertEquals(0L, CliParser.parse(new String[] {"--tick-delay-ms=100", "--no-delay"}).tickDelayOverrideMillis());
+        assertEquals(7L, CliParser.parse(new String[] {"--no-delay", "--tick-delay-ms=7"}).tickDelayOverrideMillis());
     }
 
     @Test
     void parsesSeedFlag() {
-        assertNull(Main.parseSeed(new String[0]));
-        assertEquals(42L, Main.parseSeed(new String[] {"--seed=42"}));
+        assertNull(CliParser.parse(new String[0]).seed());
+        assertEquals(42L, CliParser.parse(new String[] {"--seed=42"}).seed());
     }
 
     @Test
     void lastSeedFlagWins() {
-        assertEquals(7L, Main.parseSeed(new String[] {"--seed=1", "--seed=7"}));
+        assertEquals(7L, CliParser.parse(new String[] {"--seed=1", "--seed=7"}).seed());
     }
 
     @Test
     void parsesStopOverrideFlag() {
-        assertNull(Main.parseStopConditionType(new String[0]));
-        assertEquals("NO_HERBIVORES", Main.parseStopConditionType(new String[] {"--stop=no_herbivores"}));
+        assertNull(CliParser.parse(new String[0]).stopConditionType());
+        assertEquals("NO_HERBIVORES", CliParser.parse(new String[] {"--stop=no_herbivores"}).stopConditionType());
     }
 
     @Test
     void configLocationFlag() {
-        assertNull(Main.parseConfigLocation(new String[0]));
-        assertEquals("config/island.yml", Main.parseConfigLocation(new String[] {"--config=config/island.yml"}));
+        assertNull(CliParser.parse(new String[0]).configLocation());
+        assertEquals("config/island.yml", CliParser.parse(new String[] {"--config=config/island.yml"}).configLocation());
     }
 
     @Test
@@ -91,29 +87,29 @@ class MainArgsTest {
         try (InputStream in = Main.class.getClassLoader().getResourceAsStream("config/island.yml")) {
             Files.copy(Objects.requireNonNull(in), copy, StandardCopyOption.REPLACE_EXISTING);
         }
-        assertNotNull(Main.loadConfig(new String[] {"--config=" + copy}));
+        assertNotNull(Main.loadConfig(copy.toString()));
     }
 
     @Test
     void helpFlag() {
-        assertTrue(Main.shouldPrintHelp(new String[] {"--help"}));
-        assertTrue(Main.shouldPrintHelp(new String[] {"-h"}));
-        assertFalse(Main.shouldPrintHelp(new String[] {"--ticks=10"}));
+        assertTrue(CliParser.parse(new String[] {"--help"}).help());
+        assertTrue(CliParser.parse(new String[] {"-h"}).help());
+        assertFalse(CliParser.parse(new String[] {"--ticks=10"}).help());
     }
 
     @Test
     void loadConfigDefaultLoads() {
-        assertNotNull(Main.loadConfig(new String[0]));
+        assertNotNull(Main.loadConfig(null));
     }
 
     @Test
     void loadConfigBlankPathThrows() {
-        assertThrows(IllegalArgumentException.class, () -> Main.loadConfig(new String[] {"--config="}));
+        assertThrows(IllegalArgumentException.class, () -> Main.loadConfig(""));
     }
 
     @Test
     void validateArgsAcceptsKnownFlagsAndSinglePositional() {
-        assertDoesNotThrow(() -> Main.validateArgs(new String[] {
+        assertDoesNotThrow(() -> CliParser.parse(new String[] {
                 "--ticks=100",
                 "--report-every=10",
                 "--tick-delay-ms=0",
@@ -126,24 +122,23 @@ class MainArgsTest {
 
     @Test
     void validateArgsRejectsUnknownOption() {
-        assertThrows(IllegalArgumentException.class, () -> Main.validateArgs(new String[] {"--unknown=1"}));
+        assertThrows(IllegalArgumentException.class, () -> CliParser.parse(new String[] {"--unknown=1"}));
     }
 
     @Test
     void validateArgsRejectsMoreThanOnePositionalArgument() {
-        assertThrows(IllegalArgumentException.class, () -> Main.validateArgs(new String[] {"100", "200"}));
+        assertThrows(IllegalArgumentException.class, () -> CliParser.parse(new String[] {"100", "200"}));
     }
 
     @Test
     void applyCliOverridesReplacesStopCondition() {
-        var cfg = Main.loadConfig(new String[0]);
-        var overridden = Main.applyCliOverrides(cfg, new String[] {"--stop=NO_PREDATORS"});
+        var cfg = Main.loadConfig(null);
+        var overridden = Main.applyCliOverrides(cfg, "NO_PREDATORS");
         assertEquals(new StopCondition("NO_PREDATORS"), overridden.island().stopCondition());
     }
 
     @Test
     void applyCliOverridesRejectsUnsupportedStopCondition() {
-        var cfg = Main.loadConfig(new String[0]);
-        assertThrows(IllegalArgumentException.class, () -> Main.applyCliOverrides(cfg, new String[] {"--stop=NONE"}));
+        assertThrows(IllegalArgumentException.class, () -> CliParser.parse(new String[] {"--stop=NONE"}));
     }
 }
