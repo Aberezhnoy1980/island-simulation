@@ -8,6 +8,7 @@ public record CliOptions(
         boolean scheduledMode,
         long maxTicks,
         long reportEveryTicks,
+        long renderMapEveryTicks,
         Long tickDelayOverrideMillis,
         Long seed,
         String configLocation,

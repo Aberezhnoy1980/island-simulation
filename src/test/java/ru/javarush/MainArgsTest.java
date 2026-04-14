@@ -38,6 +38,12 @@ class MainArgsTest {
     }
 
     @Test
+    void parsesRenderMapEveryFlag() {
+        assertEquals(0L, CliParser.parse(new String[0]).renderMapEveryTicks());
+        assertEquals(12L, CliParser.parse(new String[] {"--render-map-every=12"}).renderMapEveryTicks());
+    }
+
+    @Test
     void tickDelayOverrideUnsetWhenNoFlags() {
         assertNull(CliParser.parse(new String[0]).tickDelayOverrideMillis());
     }
@@ -118,6 +124,7 @@ class MainArgsTest {
         assertDoesNotThrow(() -> CliParser.parse(new String[] {
                 "--ticks=100",
                 "--report-every=10",
+                "--render-map-every=20",
                 "--tick-delay-ms=0",
                 "--scheduled",
                 "--seed=42",
@@ -135,6 +142,11 @@ class MainArgsTest {
     @Test
     void validateArgsRejectsMoreThanOnePositionalArgument() {
         assertThrows(IllegalArgumentException.class, () -> CliParser.parse(new String[] {"100", "200"}));
+    }
+
+    @Test
+    void rejectsNegativeRenderMapEvery() {
+        assertThrows(IllegalArgumentException.class, () -> CliParser.parse(new String[] {"--render-map-every=-1"}));
     }
 
     @Test

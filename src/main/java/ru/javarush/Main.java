@@ -6,6 +6,7 @@ import ru.javarush.config.IslandSettings;
 import ru.javarush.config.StopCondition;
 import ru.javarush.domain.Island;
 import ru.javarush.domain.IslandBuilder;
+import ru.javarush.domain.Location;
 import ru.javarush.domain.OrganismKind;
 import ru.javarush.simulation.SimulationContext;
 import ru.javarush.simulation.SimulationEngine;
@@ -37,20 +38,25 @@ public final class Main {
         Random random = options.seed() != null ? new Random(options.seed()) : new Random();
 
         System.out.printf(
-                "Island %d×%d, stop: %s, max ticks: %d, tick delay: %d ms, seed: %s, mode: %s%n",
+                "Island %d×%d, stop: %s, max ticks: %d, tick delay: %d ms, seed: %s, mode: %s, map every: %d%n",
                 settings.width(),
                 settings.height(),
                 settings.stopCondition().type(),
                 options.maxTicks(),
                 tickDelayMillis,
                 options.seed() != null ? options.seed() : "random",
-                options.scheduledMode() ? "scheduled" : "loop");
+                options.scheduledMode() ? "scheduled" : "loop",
+                options.renderMapEveryTicks());
 
         Island island = new IslandBuilder(random).build(config);
         printSnapshot("Start", island, null);
+        if (options.renderMapEveryTicks() > 0) {
+            printMap("Start", island);
+        }
 
         var simulationContext = new SimulationContext(island, config, random);
         var engine = SimulationEngine.withDefaultPhases(simulationContext);
+        long observerEveryTicks = effectiveObserverFrequency(options.reportEveryTicks(), options.renderMapEveryTicks());
         long executed;
         if (options.scheduledMode()) {
             long periodMillis = Math.max(1L, tickDelayMillis);
@@ -61,21 +67,24 @@ public final class Main {
                     engine,
                     options.maxTicks(),
                     periodMillis,
-                    options.reportEveryTicks(),
-                    (execution, ctx) -> printSnapshot("Tick " + execution.tickNumber(), ctx.island(), execution));
+                    observerEveryTicks,
+                    (execution, ctx) -> onTickObserved(execution, ctx.island(), options));
         } else {
             executed = new SimulationRunner().runWithExecutionObserver(
                     engine,
                     options.maxTicks(),
                     tickDelayMillis,
-                    options.reportEveryTicks(),
-                    (execution, ctx) -> printSnapshot("Tick " + execution.tickNumber(), ctx.island(), execution));
+                    observerEveryTicks,
+                    (execution, ctx) -> onTickObserved(execution, ctx.island(), options));
         }
 
         var stopEval = new StopConditionEvaluator();
         boolean stopMatched = stopEval.shouldStop(island, settings.stopCondition());
 
         printSnapshot("Done", island, null);
+        if (options.renderMapEveryTicks() > 0) {
+            printMap("Done", island);
+        }
         System.out.printf("Executed ticks: %d, stop condition met: %b%n", executed, stopMatched);
     }
 
@@ -118,6 +127,29 @@ public final class Main {
         return tickDelayMillis;
     }
 
+    private static long effectiveObserverFrequency(long reportEveryTicks, long renderMapEveryTicks) {
+        if (reportEveryTicks > 0 && renderMapEveryTicks > 0) {
+            return Math.min(reportEveryTicks, renderMapEveryTicks);
+        }
+        if (reportEveryTicks > 0) {
+            return reportEveryTicks;
+        }
+        if (renderMapEveryTicks > 0) {
+            return renderMapEveryTicks;
+        }
+        return 0L;
+    }
+
+    private static void onTickObserved(TickExecution execution, Island island, CliOptions options) {
+        long tick = execution.tickNumber();
+        if (options.reportEveryTicks() > 0 && tick % options.reportEveryTicks() == 0) {
+            printSnapshot("Tick " + tick, island, execution);
+        }
+        if (options.renderMapEveryTicks() > 0 && tick % options.renderMapEveryTicks() == 0) {
+            printMap("Map tick " + tick, island);
+        }
+    }
+
     private static void printSnapshot(String title, Island island, TickExecution execution) {
         Map<OrganismKind, Long> byKind = island.totalPopulationByKind();
         long predators = byKind.getOrDefault(OrganismKind.PREDATOR, 0L);
@@ -146,5 +178,42 @@ public final class Main {
                 plants,
                 topSpecies,
                 extras);
+    }
+
+    private static void printMap(String title, Island island) {
+        System.out.printf("%s map (%dx%d)%n", title, island.width(), island.height());
+        for (int row = 0; row < island.height(); row++) {
+            StringBuilder line = new StringBuilder(island.width());
+            for (int col = 0; col < island.width(); col++) {
+                line.append(cellGlyph(island.cell(row, col)));
+            }
+            System.out.println(line);
+        }
+    }
+
+    private static char cellGlyph(Location cell) {
+        boolean hasPredator = false;
+        boolean hasHerbivore = false;
+        boolean hasPlant = false;
+        for (var resident : cell.residentsView()) {
+            OrganismKind kind = resident.kind();
+            if (kind == OrganismKind.PREDATOR) {
+                hasPredator = true;
+            } else if (kind == OrganismKind.HERBIVORE) {
+                hasHerbivore = true;
+            } else if (kind == OrganismKind.PLANT) {
+                hasPlant = true;
+            }
+            if (hasPredator) {
+                return 'P';
+            }
+        }
+        if (hasHerbivore) {
+            return 'H';
+        }
+        if (hasPlant) {
+            return '*';
+        }
+        return '.';
     }
 }

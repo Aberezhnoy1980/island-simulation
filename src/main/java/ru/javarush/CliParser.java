@@ -21,18 +21,23 @@ public final class CliParser {
 
     public static CliOptions parse(String[] args) {
         if (shouldPrintHelp(args)) {
-            return new CliOptions(true, false, DEFAULT_MAX_TICKS, DEFAULT_REPORT_EVERY_TICKS, null, null, null, null);
+            return new CliOptions(true, false, DEFAULT_MAX_TICKS, DEFAULT_REPORT_EVERY_TICKS, 0L, null, null, null, null);
         }
         validateArgs(args);
         String stop = parseStopConditionType(args);
         if (stop != null && !SUPPORTED_STOP_CONDITIONS.contains(stop)) {
             throw new IllegalArgumentException("--stop must be one of " + SUPPORTED_STOP_CONDITIONS + ", got: " + stop);
         }
+        long renderMapEvery = parseRenderMapEveryTicks(args);
+        if (renderMapEvery < 0) {
+            throw new IllegalArgumentException("--render-map-every must be >= 0");
+        }
         return new CliOptions(
                 false,
                 parseScheduledMode(args),
                 parseMaxTicks(args),
                 parseReportEveryTicks(args),
+                renderMapEvery,
                 parseTickDelayOverrideMillis(args),
                 parseSeed(args),
                 parseConfigLocation(args),
@@ -50,6 +55,7 @@ public final class CliParser {
                   --tick-delay-ms=N      Pause after each tick in ms (overrides island.tickDurationMillis in YAML)
                   --no-delay             Same as --tick-delay-ms=0
                   --scheduled            Run ticks via ScheduledExecutorService (single-thread scheduled mode)
+                  --render-map-every=N   Print map snapshot every N ticks (0 disables)
                   --seed=N               Deterministic random seed for reproducible runs
                   --stop=TYPE            Override stop condition (ALL_ANIMALS_DEAD|NO_HERBIVORES|NO_PREDATORS)
                   --config=PATH          YAML file path or classpath resource (default: config/island.yml)
@@ -58,6 +64,7 @@ public final class CliParser {
                 Examples:
                   --ticks=1000 --no-delay
                   --scheduled --tick-delay-ms=10 --report-every=1
+                  --render-map-every=25 --report-every=50
                   --ticks=500 --seed=42 --no-delay
                   --stop=NO_HERBIVORES --report-every=1
                   --report-every=1 --tick-delay-ms=0
@@ -103,6 +110,7 @@ public final class CliParser {
                 || "--scheduled".equals(arg)
                 || arg.startsWith("--ticks=")
                 || arg.startsWith("--report-every=")
+                || arg.startsWith("--render-map-every=")
                 || arg.startsWith("--tick-delay-ms=")
                 || arg.startsWith("--seed=")
                 || arg.startsWith("--stop=")
@@ -130,6 +138,15 @@ public final class CliParser {
             }
         }
         return DEFAULT_REPORT_EVERY_TICKS;
+    }
+
+    static long parseRenderMapEveryTicks(String[] args) {
+        for (String a : args) {
+            if (a.startsWith("--render-map-every=")) {
+                return Long.parseLong(a.substring("--render-map-every=".length()));
+            }
+        }
+        return 0L;
     }
 
     static Long parseTickDelayOverrideMillis(String[] args) {
