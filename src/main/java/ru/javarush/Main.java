@@ -6,7 +6,6 @@ import ru.javarush.config.IslandSettings;
 import ru.javarush.config.StopCondition;
 import ru.javarush.domain.Island;
 import ru.javarush.domain.IslandBuilder;
-import ru.javarush.domain.Location;
 import ru.javarush.domain.OrganismKind;
 import ru.javarush.simulation.SimulationContext;
 import ru.javarush.simulation.SimulationEngine;
@@ -14,6 +13,8 @@ import ru.javarush.simulation.SimulationRunner;
 import ru.javarush.simulation.ScheduledSimulationRunner;
 import ru.javarush.simulation.StopConditionEvaluator;
 import ru.javarush.simulation.TickExecution;
+import ru.javarush.view.CellGlyphResolver;
+import ru.javarush.view.SpeciesGlyphTable;
 
 import java.util.Comparator;
 import java.util.List;
@@ -48,10 +49,12 @@ public final class Main {
                 options.scheduledMode() ? "scheduled" : "loop",
                 options.renderMapEveryTicks());
 
+        SpeciesGlyphTable glyphTable = SpeciesGlyphTable.loadDefault();
+
         Island island = new IslandBuilder(random).build(config);
         printSnapshot("Start", island, null);
         if (options.renderMapEveryTicks() > 0) {
-            printMap("Start", island);
+            printMap("Start", island, glyphTable);
         }
 
         var simulationContext = new SimulationContext(island, config, random);
@@ -68,14 +71,14 @@ public final class Main {
                     options.maxTicks(),
                     periodMillis,
                     observerEveryTicks,
-                    (execution, ctx) -> onTickObserved(execution, ctx.island(), options));
+                    (execution, ctx) -> onTickObserved(execution, ctx.island(), options, glyphTable));
         } else {
             executed = new SimulationRunner().runWithExecutionObserver(
                     engine,
                     options.maxTicks(),
                     tickDelayMillis,
                     observerEveryTicks,
-                    (execution, ctx) -> onTickObserved(execution, ctx.island(), options));
+                    (execution, ctx) -> onTickObserved(execution, ctx.island(), options, glyphTable));
         }
 
         var stopEval = new StopConditionEvaluator();
@@ -83,7 +86,7 @@ public final class Main {
 
         printSnapshot("Done", island, null);
         if (options.renderMapEveryTicks() > 0) {
-            printMap("Done", island);
+            printMap("Done", island, glyphTable);
         }
         System.out.printf("Executed ticks: %d, stop condition met: %b%n", executed, stopMatched);
     }
@@ -140,13 +143,14 @@ public final class Main {
         return 0L;
     }
 
-    private static void onTickObserved(TickExecution execution, Island island, CliOptions options) {
+    private static void onTickObserved(
+            TickExecution execution, Island island, CliOptions options, SpeciesGlyphTable glyphTable) {
         long tick = execution.tickNumber();
         if (options.reportEveryTicks() > 0 && tick % options.reportEveryTicks() == 0) {
             printSnapshot("Tick " + tick, island, execution);
         }
         if (options.renderMapEveryTicks() > 0 && tick % options.renderMapEveryTicks() == 0) {
-            printMap("Map tick " + tick, island);
+            printMap("Map tick " + tick, island, glyphTable);
         }
     }
 
@@ -180,40 +184,14 @@ public final class Main {
                 extras);
     }
 
-    private static void printMap(String title, Island island) {
+    private static void printMap(String title, Island island, SpeciesGlyphTable glyphTable) {
         System.out.printf("%s map (%dx%d)%n", title, island.width(), island.height());
         for (int row = 0; row < island.height(); row++) {
-            StringBuilder line = new StringBuilder(island.width());
+            StringBuilder line = new StringBuilder(island.width() * 4);
             for (int col = 0; col < island.width(); col++) {
-                line.append(cellGlyph(island.cell(row, col)));
+                line.append(CellGlyphResolver.glyph(island.cell(row, col), glyphTable));
             }
             System.out.println(line);
         }
-    }
-
-    private static char cellGlyph(Location cell) {
-        boolean hasPredator = false;
-        boolean hasHerbivore = false;
-        boolean hasPlant = false;
-        for (var resident : cell.residentsView()) {
-            OrganismKind kind = resident.kind();
-            if (kind == OrganismKind.PREDATOR) {
-                hasPredator = true;
-            } else if (kind == OrganismKind.HERBIVORE) {
-                hasHerbivore = true;
-            } else if (kind == OrganismKind.PLANT) {
-                hasPlant = true;
-            }
-            if (hasPredator) {
-                return 'P';
-            }
-        }
-        if (hasHerbivore) {
-            return 'H';
-        }
-        if (hasPlant) {
-            return '*';
-        }
-        return '.';
     }
 }
