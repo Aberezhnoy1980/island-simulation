@@ -1,6 +1,13 @@
 package ru.javarush.config;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,5 +39,21 @@ class IslandConfigLoaderTest {
 
         assertNotNull(cfg.dietMatrix());
         assertTrue(cfg.dietMatrix().containsKey("wolf"));
+    }
+
+    @Test
+    void loadReadsFromFileWhenPathExists(@TempDir Path tempDir) throws Exception {
+        Path copy = tempDir.resolve("custom.yml");
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream("config/island.yml")) {
+            Files.copy(Objects.requireNonNull(in), copy, StandardCopyOption.REPLACE_EXISTING);
+        }
+        IslandSimulationConfig cfg = new IslandConfigLoader().load(copy.toString());
+        assertEquals(100, cfg.island().width());
+    }
+
+    @Test
+    void loadFallsBackToClasspathWhenPathIsNotAFile() {
+        IslandSimulationConfig cfg = new IslandConfigLoader().load("config/island.yml");
+        assertEquals(100, cfg.island().width());
     }
 }

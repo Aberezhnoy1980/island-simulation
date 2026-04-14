@@ -6,10 +6,12 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * Загрузка {@link IslandSimulationConfig} из YAML на classpath.
+ * Загрузка {@link IslandSimulationConfig} из YAML: файл на диске или ресурс classpath.
  */
 public final class IslandConfigLoader {
 
@@ -26,6 +28,21 @@ public final class IslandConfigLoader {
     /**
      * Читает конфиг из classpath (например {@code config/island.yml}).
      */
+    /**
+     * Сначала пробует обычный файл по пути {@code location}; если такого файла нет — classpath.
+     */
+    public IslandSimulationConfig load(String location) {
+        Objects.requireNonNull(location, "location");
+        if (location.isBlank()) {
+            throw new IllegalArgumentException("location must not be blank");
+        }
+        Path path = Path.of(location).normalize();
+        if (Files.isRegularFile(path)) {
+            return loadFromFile(path);
+        }
+        return loadFromClasspath(location);
+    }
+
     public IslandSimulationConfig loadFromClasspath(String classpathLocation) {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try (InputStream in = cl.getResourceAsStream(classpathLocation)) {
@@ -35,6 +52,16 @@ public final class IslandConfigLoader {
             return cfg;
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to read YAML: " + classpathLocation, e);
+        }
+    }
+
+    private IslandSimulationConfig loadFromFile(Path path) {
+        try {
+            IslandSimulationConfig cfg = yamlMapper.readValue(path.toFile(), IslandSimulationConfig.class);
+            validator.validate(cfg);
+            return cfg;
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to read YAML file: " + path.toAbsolutePath(), e);
         }
     }
 

@@ -69,14 +69,14 @@ public final class Main {
     }
 
     static IslandSimulationConfig loadConfig(String[] args) {
-        String location = parseClasspathConfigLocation(args);
+        String location = parseConfigLocation(args);
         if (location == null) {
             return new IslandConfigLoader().loadDefault();
         }
         if (location.isBlank()) {
             throw new IllegalArgumentException("--config must not be empty (example: --config=config/island.yml)");
         }
-        return new IslandConfigLoader().loadFromClasspath(location);
+        return new IslandConfigLoader().load(location);
     }
 
     static boolean shouldPrintHelp(String[] args) {
@@ -97,13 +97,14 @@ public final class Main {
                   --report-every=N       Print snapshot every N ticks (default 50)
                   --tick-delay-ms=N      Pause after each tick in ms (overrides island.tickDurationMillis in YAML)
                   --no-delay             Same as --tick-delay-ms=0
-                  --config=PATH          Classpath resource for YAML (default: config/island.yml)
+                  --config=PATH          YAML file path or classpath resource (default: config/island.yml)
                   -h, --help             Show this message
 
                 Examples:
                   --ticks=1000 --no-delay
                   --report-every=1 --tick-delay-ms=0
                   --config=config/island.yml --ticks=200
+                  --config=/tmp/my-island.yml
                 """);
     }
 
@@ -144,7 +145,7 @@ public final class Main {
     }
 
     /** {@code null} — взять дефолтный classpath-ресурс {@link IslandConfigLoader#DEFAULT_CLASSPATH_RESOURCE}. */
-    static String parseClasspathConfigLocation(String[] args) {
+    static String parseConfigLocation(String[] args) {
         for (String a : args) {
             if (a.startsWith("--config=")) {
                 return a.substring("--config=".length());

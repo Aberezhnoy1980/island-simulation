@@ -1,6 +1,13 @@
 package ru.javarush;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -54,9 +61,18 @@ class MainArgsTest {
     }
 
     @Test
-    void classpathConfigLocation() {
-        assertNull(Main.parseClasspathConfigLocation(new String[0]));
-        assertEquals("config/island.yml", Main.parseClasspathConfigLocation(new String[] {"--config=config/island.yml"}));
+    void configLocationFlag() {
+        assertNull(Main.parseConfigLocation(new String[0]));
+        assertEquals("config/island.yml", Main.parseConfigLocation(new String[] {"--config=config/island.yml"}));
+    }
+
+    @Test
+    void loadConfigLoadsFromYamlFileOnDisk(@TempDir Path tempDir) throws Exception {
+        Path copy = tempDir.resolve("island-copy.yml");
+        try (InputStream in = Main.class.getClassLoader().getResourceAsStream("config/island.yml")) {
+            Files.copy(Objects.requireNonNull(in), copy, StandardCopyOption.REPLACE_EXISTING);
+        }
+        assertNotNull(Main.loadConfig(new String[] {"--config=" + copy}));
     }
 
     @Test
