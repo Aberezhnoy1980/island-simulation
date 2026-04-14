@@ -57,6 +57,7 @@ class FeedingServiceTest {
                 new StopCondition("NONE"),
                 null,
                 null,
+                null,
                 null);
         return new IslandSimulationConfig(island, animals, diet);
     }

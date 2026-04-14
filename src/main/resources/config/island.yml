@@ -21,6 +21,7 @@ island:
   maxTicksWithoutFood: 5
   plantGrowthChancePercent: 30
   parallelMovementPlanning: false
+  parallelPlantGrowthPlanning: false
   stopCondition:
     type: ALL_ANIMALS_DEAD
 

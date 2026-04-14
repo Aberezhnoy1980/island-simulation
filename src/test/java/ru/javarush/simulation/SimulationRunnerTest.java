@@ -25,6 +25,7 @@ class SimulationRunnerTest {
                 new StopCondition("ALL_ANIMALS_DEAD"),
                 null,
                 null,
+                null,
                 null);
         var cfg = new IslandSimulationConfig(islandSettings, Map.of("plant", plant), Map.of());
         Island island = new Island(2, 2);
@@ -45,6 +46,7 @@ class SimulationRunnerTest {
                 0L,
                 Map.of(),
                 new StopCondition("NONE"),
+                null,
                 null,
                 null,
                 null);

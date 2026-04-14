@@ -25,7 +25,7 @@ class ReproductionServiceTest {
         var plant = new AnimalSettings("Растения", 0.1, 200, 0, 0.0, "PLANT", null);
         var animals = Map.of("rabbit", rabbit, "plant", plant);
         var diet = Map.of("rabbit", Map.of("plant", 100));
-        var island = new IslandSettings(4, 4, 500L, Map.of(), new StopCondition("NONE"), null, null, null);
+        var island = new IslandSettings(4, 4, 500L, Map.of(), new StopCondition("NONE"), null, null, null, null);
         return new IslandSimulationConfig(island, animals, diet);
     }
 

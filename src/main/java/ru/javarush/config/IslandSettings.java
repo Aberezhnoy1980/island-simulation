@@ -24,6 +24,27 @@ public record IslandSettings(
         /**
          * Если true, план перемещений в фазе movement строится параллельно (применение плана всё равно последовательно).
          */
-        Boolean parallelMovementPlanning
+        Boolean parallelMovementPlanning,
+        /**
+         * Если true, план появления растений в фазе plantGrowth строится параллельно (применение — последовательно).
+         * {@code null} — то же поведение, что и у {@link #parallelMovementPlanning}, чтобы старые конфиги без ключа
+         * вели себя как раньше.
+         */
+        Boolean parallelPlantGrowthPlanning
 ) {
+    /** Параллельное планирование движения; {@code null} трактуется как false. */
+    public boolean effectiveParallelMovementPlanning() {
+        return Boolean.TRUE.equals(parallelMovementPlanning());
+    }
+
+    /**
+     * Параллельное планирование роста растений; при незаданном ключе в YAML совпадает с
+     * {@link #effectiveParallelMovementPlanning()}.
+     */
+    public boolean effectiveParallelPlantGrowthPlanning() {
+        if (parallelPlantGrowthPlanning() != null) {
+            return Boolean.TRUE.equals(parallelPlantGrowthPlanning());
+        }
+        return effectiveParallelMovementPlanning();
+    }
 }

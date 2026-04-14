@@ -35,6 +35,7 @@ class DeathServiceTest {
                 new StopCondition("NONE"),
                 maxTicksWithoutFood,
                 null,
+                null,
                 null);
         return new IslandSimulationConfig(island, animals, diet);
     }

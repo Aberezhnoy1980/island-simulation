@@ -48,7 +48,7 @@ mvn -q exec:java -Dexec.args="--config=config/island.yml --ticks=200"
 Приложение строит остров из конфига и гоняет `SimulationRunner` до `stopCondition` в YAML (`ALL_ANIMALS_DEAD`, `NO_HERBIVORES`, `NO_PREDATORS`) или до лимита тиков.
 
 Порядок фаз: **`plantGrowth`** → `movement` → `feeding` → `reproduction` → `death`. Рост растений — `island.plantGrowthChancePercent` (в YAML; иначе дефолт 25), не выше `maxPerLocation` для вида `PLANT` на клетке.
-Через `island.parallelMovementPlanning: true` можно включить параллельное **планирование** для фаз `plantGrowth` и `movement`; применение плана остаётся последовательным, чтобы не ломать целостность данных.
+Параллельное **планирование** (применение — по-прежнему последовательное): `island.parallelMovementPlanning` для `movement`, `island.parallelPlantGrowthPlanning` для `plantGrowth`. Если второй ключ не задан в YAML, рост растений наследует флаг движения (обратная совместимость со старыми конфигами).
 В промежуточных отчётах по тикам дополнительно печатается `delta` (изменение числа существ за тик) и время фаз в миллисекундах.
 
 Перед запуском выполняется валидация `island.yml`: размеры/тайминги, диапазоны процентов, ссылки на существующие виды в `initialAnimals` и `dietMatrix`, поддерживаемые `stopCondition`.

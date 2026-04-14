@@ -14,7 +14,7 @@ public final class MovementPhase implements LifecyclePhase {
 
     @Override
     public void execute(SimulationContext context) {
-        boolean parallelPlanning = Boolean.TRUE.equals(context.config().island().parallelMovementPlanning());
+        boolean parallelPlanning = context.config().island().effectiveParallelMovementPlanning();
         movementService.relocateMobileOrganisms(context.island(), context.random(), parallelPlanning);
     }
 }
