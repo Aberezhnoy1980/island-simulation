@@ -36,18 +36,20 @@ public final class Main {
         long maxTicks = parseMaxTicks(args);
         long reportEveryTicks = parseReportEveryTicks(args);
         long tickDelayMillis = parseTickDelayMillis(args, settings.tickDurationMillis());
+        Long seed = parseSeed(args);
         if (tickDelayMillis < 0) {
             throw new IllegalArgumentException("tick delay must be >= 0 (use --tick-delay-ms=N or --no-delay)");
         }
-        Random random = new Random();
+        Random random = seed != null ? new Random(seed) : new Random();
 
         System.out.printf(
-                "Island %d×%d, stop: %s, max ticks: %d, tick delay: %d ms%n",
+                "Island %d×%d, stop: %s, max ticks: %d, tick delay: %d ms, seed: %s%n",
                 settings.width(),
                 settings.height(),
                 settings.stopCondition().type(),
                 maxTicks,
-                tickDelayMillis);
+                tickDelayMillis,
+                seed != null ? seed : "random");
 
         Island island = new IslandBuilder(random).build(config);
         printSnapshot("Start", island, null);
@@ -97,11 +99,13 @@ public final class Main {
                   --report-every=N       Print snapshot every N ticks (default 50)
                   --tick-delay-ms=N      Pause after each tick in ms (overrides island.tickDurationMillis in YAML)
                   --no-delay             Same as --tick-delay-ms=0
+                  --seed=N               Deterministic random seed for reproducible runs
                   --config=PATH          YAML file path or classpath resource (default: config/island.yml)
                   -h, --help             Show this message
 
                 Examples:
                   --ticks=1000 --no-delay
+                  --ticks=500 --seed=42 --no-delay
                   --report-every=1 --tick-delay-ms=0
                   --config=config/island.yml --ticks=200
                   --config=/tmp/my-island.yml
@@ -142,6 +146,17 @@ public final class Main {
             }
         }
         return explicit != null ? explicit : configDefault;
+    }
+
+    /** {@code null} — сид не задан, генератор инициализируется случайно. */
+    static Long parseSeed(String[] args) {
+        Long seed = null;
+        for (String a : args) {
+            if (a.startsWith("--seed=")) {
+                seed = Long.parseLong(a.substring("--seed=".length()));
+            }
+        }
+        return seed;
     }
 
     /** {@code null} — взять дефолтный classpath-ресурс {@link IslandConfigLoader#DEFAULT_CLASSPATH_RESOURCE}. */

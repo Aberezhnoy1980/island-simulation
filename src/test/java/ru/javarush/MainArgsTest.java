@@ -61,6 +61,17 @@ class MainArgsTest {
     }
 
     @Test
+    void parsesSeedFlag() {
+        assertNull(Main.parseSeed(new String[0]));
+        assertEquals(42L, Main.parseSeed(new String[] {"--seed=42"}));
+    }
+
+    @Test
+    void lastSeedFlagWins() {
+        assertEquals(7L, Main.parseSeed(new String[] {"--seed=1", "--seed=7"}));
+    }
+
+    @Test
     void configLocationFlag() {
         assertNull(Main.parseConfigLocation(new String[0]));
         assertEquals("config/island.yml", Main.parseConfigLocation(new String[] {"--config=config/island.yml"}));
