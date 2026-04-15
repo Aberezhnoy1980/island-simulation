@@ -1,0 +1,69 @@
+# Небольшой остров с повышенной долей хищников для наглядной демонстрации predator-heavy сценария.
+# Полный мир: config/island.yml.
+island:
+  width: 24
+  height: 8
+  tickDurationMillis: 300
+  initialAnimals:
+    wolf: 12
+    rabbit: 18
+    mouse: 20
+    caterpillar: 25
+  maxTicksWithoutFood: 5
+  plantGrowthChancePercent: 30
+  parallelMovementPlanning: false
+  parallelPlantGrowthPlanning: false
+  stopCondition:
+    type: ALL_ANIMALS_DEAD
+
+animals:
+  wolf:
+    name: "Волк"
+    weightKg: 50.0
+    maxPerLocation: 30
+    speed: 3
+    maxFoodKg: 8.0
+    type: PREDATOR
+  rabbit:
+    name: "Кролик"
+    weightKg: 2.0
+    maxPerLocation: 150
+    speed: 2
+    maxFoodKg: 0.45
+    reproductionChancePercent: 20
+    type: HERBIVORE
+  mouse:
+    name: "Мышь"
+    weightKg: 0.05
+    maxPerLocation: 500
+    speed: 1
+    maxFoodKg: 0.01
+    type: HERBIVORE
+  caterpillar:
+    name: "Гусеница"
+    weightKg: 0.01
+    maxPerLocation: 1000
+    speed: 0
+    maxFoodKg: 0.0
+    type: HERBIVORE
+  plant:
+    name: "Растения"
+    weightKg: 1.0
+    maxPerLocation: 200
+    speed: 0
+    maxFoodKg: 0.0
+    type: PLANT
+
+dietMatrix:
+  wolf:
+    rabbit: 60
+    mouse: 80
+    caterpillar: 40
+    plant: 0
+  rabbit:
+    plant: 100
+  mouse:
+    caterpillar: 90
+    plant: 100
+  caterpillar:
+    plant: 100
