@@ -14,7 +14,9 @@ public final class DeathPhase implements LifecyclePhase {
 
     @Override
     public void execute(SimulationContext context) {
-        deathService.applyStarvation(context.island(), context.config().island());
+        boolean parallelCellPasses = context.config().island().effectiveParallelMovementPlanning()
+                || context.config().island().effectiveParallelPlantGrowthPlanning();
+        deathService.applyStarvation(context.island(), context.config().island(), parallelCellPasses);
     }
 }
 

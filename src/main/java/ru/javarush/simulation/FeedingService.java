@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 /**
  * Питание на клетке: для каждого животного (в случайном порядке) читается строка {@code dietMatrix},
@@ -25,11 +26,15 @@ import java.util.Random;
 public final class FeedingService {
 
     public void feedAll(Island island, IslandSimulationConfig config, Random random) {
+        feedAll(island, config, random, false);
+    }
+
+    public void feedAll(Island island, IslandSimulationConfig config, Random random, boolean parallelCellPasses) {
         Objects.requireNonNull(island, "island");
         Objects.requireNonNull(config, "config");
         Objects.requireNonNull(random, "random");
 
-        resetStomachs(island);
+        resetStomachs(island, parallelCellPasses);
 
         int height = island.height();
         int width = island.width();
@@ -40,13 +45,25 @@ public final class FeedingService {
         }
     }
 
-    private static void resetStomachs(Island island) {
-        for (int row = 0; row < island.height(); row++) {
-            for (int col = 0; col < island.width(); col++) {
-                for (Organism o : island.cell(row, col).residentsView()) {
-                    if (o instanceof Animal animal) {
-                        animal.startFeedingRound();
-                    }
+    private static void resetStomachs(Island island, boolean parallelCellPasses) {
+        int height = island.height();
+        int width = island.width();
+        if (parallelCellPasses) {
+            IntStream.range(0, height)
+                    .parallel()
+                    .forEach(row -> resetStomachsOnRow(island, row, width));
+            return;
+        }
+        for (int row = 0; row < height; row++) {
+            resetStomachsOnRow(island, row, width);
+        }
+    }
+
+    private static void resetStomachsOnRow(Island island, int row, int width) {
+        for (int col = 0; col < width; col++) {
+            for (Organism o : island.cell(row, col).residentsView()) {
+                if (o instanceof Animal animal) {
+                    animal.startFeedingRound();
                 }
             }
         }

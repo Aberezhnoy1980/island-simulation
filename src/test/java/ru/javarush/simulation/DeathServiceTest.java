@@ -93,4 +93,22 @@ class DeathServiceTest {
         assertEquals(1, island.totalCreatures());
         assertTrue(island.cell(0, 0).residentsView().contains(plant));
     }
+
+    @Test
+    void parallelStarvationModeBehavesLikeSequential() {
+        IslandSimulationConfig cfg = configRabbitOnly(2);
+        Island island = new Island(3, 3);
+        var rabbit = new Herbivore("rabbit", cfg.animals().get("rabbit"));
+        island.cell(1, 1).add(rabbit);
+        var rnd = new Random(1);
+
+        feeding.feedAll(island, cfg, rnd, true);
+        death.applyStarvation(island, cfg.island(), true);
+        assertEquals(1, island.totalCreatures());
+        assertEquals(1, rabbit.ticksWithoutFood());
+
+        feeding.feedAll(island, cfg, rnd, true);
+        death.applyStarvation(island, cfg.island(), true);
+        assertEquals(0, island.totalCreatures());
+    }
 }

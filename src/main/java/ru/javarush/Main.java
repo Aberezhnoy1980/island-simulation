@@ -25,6 +25,7 @@ import java.util.Random;
  * Точка входа: загрузка конфига, построение острова, цикл симуляции до стоп-условия или лимита тиков.
  */
 public final class Main {
+    private static final String ANSI_CLEAR_AND_HOME = "\u001B[2J\u001B[H";
 
     public static void main(String[] args) {
         CliOptions options = CliParser.parse(args);
@@ -48,18 +49,23 @@ public final class Main {
                 options.seed() != null ? options.seed() : "random",
                 options.scheduledMode() ? "scheduled" : "loop",
                 options.renderMapEveryTicks());
+        boolean liveUi = resolveLiveUiMode(options);
 
         SpeciesGlyphTable glyphTable = SpeciesGlyphTable.loadDefault();
 
         Island island = new IslandBuilder(random).build(config);
-        printSnapshot("Start", island, null);
-        if (options.renderMapEveryTicks() > 0) {
-            printMap("Start", island, glyphTable);
+        if (liveUi) {
+            renderLiveFrame("Start", island, null, glyphTable);
+        } else {
+            printSnapshot("Start", island, null);
+            if (options.renderMapEveryTicks() > 0) {
+                printMap("Start", island, glyphTable);
+            }
         }
 
         var simulationContext = new SimulationContext(island, config, random);
         var engine = SimulationEngine.withDefaultPhases(simulationContext);
-        long observerEveryTicks = effectiveObserverFrequency(options.reportEveryTicks(), options.renderMapEveryTicks());
+        long observerEveryTicks = liveUi ? 1L : effectiveObserverFrequency(options.reportEveryTicks(), options.renderMapEveryTicks());
         long executed;
         if (options.scheduledMode()) {
             long periodMillis = Math.max(1L, tickDelayMillis);
@@ -71,22 +77,26 @@ public final class Main {
                     options.maxTicks(),
                     periodMillis,
                     observerEveryTicks,
-                    (execution, ctx) -> onTickObserved(execution, ctx.island(), options, glyphTable));
+                    (execution, ctx) -> onTickObserved(execution, ctx.island(), options, glyphTable, liveUi));
         } else {
             executed = new SimulationRunner().runWithExecutionObserver(
                     engine,
                     options.maxTicks(),
                     tickDelayMillis,
                     observerEveryTicks,
-                    (execution, ctx) -> onTickObserved(execution, ctx.island(), options, glyphTable));
+                    (execution, ctx) -> onTickObserved(execution, ctx.island(), options, glyphTable, liveUi));
         }
 
         var stopEval = new StopConditionEvaluator();
         boolean stopMatched = stopEval.shouldStop(island, settings.stopCondition());
 
-        printSnapshot("Done", island, null);
-        if (options.renderMapEveryTicks() > 0) {
-            printMap("Done", island, glyphTable);
+        if (liveUi) {
+            renderLiveFrame("Done", island, null, glyphTable);
+        } else {
+            printSnapshot("Done", island, null);
+            if (options.renderMapEveryTicks() > 0) {
+                printMap("Done", island, glyphTable);
+            }
         }
         System.out.printf("Executed ticks: %d, stop condition met: %b%n", executed, stopMatched);
     }
@@ -144,8 +154,16 @@ public final class Main {
     }
 
     private static void onTickObserved(
-            TickExecution execution, Island island, CliOptions options, SpeciesGlyphTable glyphTable) {
+            TickExecution execution,
+            Island island,
+            CliOptions options,
+            SpeciesGlyphTable glyphTable,
+            boolean liveUi) {
         long tick = execution.tickNumber();
+        if (liveUi) {
+            renderLiveFrame("Tick " + tick, island, execution, glyphTable);
+            return;
+        }
         if (options.reportEveryTicks() > 0 && tick % options.reportEveryTicks() == 0) {
             printSnapshot("Tick " + tick, island, execution);
         }
@@ -155,6 +173,10 @@ public final class Main {
     }
 
     private static void printSnapshot(String title, Island island, TickExecution execution) {
+        System.out.println(snapshotLine(title, island, execution));
+    }
+
+    private static String snapshotLine(String title, Island island, TickExecution execution) {
         Map<OrganismKind, Long> byKind = island.totalPopulationByKind();
         long predators = byKind.getOrDefault(OrganismKind.PREDATOR, 0L);
         long herbivores = byKind.getOrDefault(OrganismKind.HERBIVORE, 0L);
@@ -173,8 +195,7 @@ public final class Main {
                     .toString();
             extras = ", delta=" + delta + ", phases=" + phaseStats;
         }
-        System.out.printf(
-                "%s => total=%d, predators=%d, herbivores=%d, plants=%d, top=%s%s%n",
+        return "%s => total=%d, predators=%d, herbivores=%d, plants=%d, top=%s%s".formatted(
                 title,
                 island.totalCreatures(),
                 predators,
@@ -185,13 +206,40 @@ public final class Main {
     }
 
     private static void printMap(String title, Island island, SpeciesGlyphTable glyphTable) {
-        System.out.printf("%s map (%dx%d)%n", title, island.width(), island.height());
+        System.out.print(mapBlock(title, island, glyphTable));
+    }
+
+    private static String mapBlock(String title, Island island, SpeciesGlyphTable glyphTable) {
+        StringBuilder out = new StringBuilder();
+        out.append("%s map (%dx%d)%n".formatted(title, island.width(), island.height()));
         for (int row = 0; row < island.height(); row++) {
             StringBuilder line = new StringBuilder(island.width() * 4);
             for (int col = 0; col < island.width(); col++) {
                 line.append(CellGlyphResolver.glyph(island.cell(row, col), glyphTable));
             }
-            System.out.println(line);
+            out.append(line).append(System.lineSeparator());
         }
+        return out.toString();
+    }
+
+    private static boolean resolveLiveUiMode(CliOptions options) {
+        if (options.uiMode() != UiMode.LIVE) {
+            return false;
+        }
+        if (System.console() == null) {
+            System.out.println("UI mode 'live' requested, but no interactive console detected. Falling back to 'stream'.");
+            return false;
+        }
+        return true;
+    }
+
+    private static void renderLiveFrame(String title, Island island, TickExecution execution, SpeciesGlyphTable glyphTable) {
+        StringBuilder frame = new StringBuilder();
+        frame.append(ANSI_CLEAR_AND_HOME);
+        frame.append(snapshotLine(title, island, execution)).append(System.lineSeparator());
+        frame.append(System.lineSeparator());
+        frame.append(mapBlock(title, island, glyphTable));
+        System.out.print(frame);
+        System.out.flush();
     }
 }

@@ -27,6 +27,13 @@ class MainArgsTest {
     }
 
     @Test
+    void parsesUiModeFlag() {
+        assertEquals(UiMode.STREAM, CliParser.parse(new String[0]).uiMode());
+        assertEquals(UiMode.LIVE, CliParser.parse(new String[] {"--ui=live"}).uiMode());
+        assertEquals(UiMode.STREAM, CliParser.parse(new String[] {"--ui=STREAM"}).uiMode());
+    }
+
+    @Test
     void defaultWhenNoArgs() {
         assertEquals(CliParser.DEFAULT_MAX_TICKS, CliParser.parse(new String[0]).maxTicks());
     }
@@ -122,6 +129,7 @@ class MainArgsTest {
     @Test
     void validateArgsAcceptsKnownFlagsAndSinglePositional() {
         assertDoesNotThrow(() -> CliParser.parse(new String[] {
+                "--ui=live",
                 "--ticks=100",
                 "--report-every=10",
                 "--render-map-every=20",
@@ -159,5 +167,10 @@ class MainArgsTest {
     @Test
     void applyCliOverridesRejectsUnsupportedStopCondition() {
         assertThrows(IllegalArgumentException.class, () -> CliParser.parse(new String[] {"--stop=NONE"}));
+    }
+
+    @Test
+    void rejectsUnsupportedUiMode() {
+        assertThrows(IllegalArgumentException.class, () -> CliParser.parse(new String[] {"--ui=rich"}));
     }
 }

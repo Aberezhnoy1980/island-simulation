@@ -15,15 +15,17 @@ public final class CliParser {
             "ALL_ANIMALS_DEAD",
             "NO_HERBIVORES",
             "NO_PREDATORS");
+    public static final Set<String> SUPPORTED_UI_MODES = Set.of("STREAM", "LIVE");
 
     private CliParser() {
     }
 
     public static CliOptions parse(String[] args) {
         if (shouldPrintHelp(args)) {
-            return new CliOptions(true, false, DEFAULT_MAX_TICKS, DEFAULT_REPORT_EVERY_TICKS, 0L, null, null, null, null);
+            return new CliOptions(true, UiMode.STREAM, false, DEFAULT_MAX_TICKS, DEFAULT_REPORT_EVERY_TICKS, 0L, null, null, null, null);
         }
         validateArgs(args);
+        UiMode uiMode = parseUiMode(args);
         String stop = parseStopConditionType(args);
         if (stop != null && !SUPPORTED_STOP_CONDITIONS.contains(stop)) {
             throw new IllegalArgumentException("--stop must be one of " + SUPPORTED_STOP_CONDITIONS + ", got: " + stop);
@@ -34,6 +36,7 @@ public final class CliParser {
         }
         return new CliOptions(
                 false,
+                uiMode,
                 parseScheduledMode(args),
                 parseMaxTicks(args),
                 parseReportEveryTicks(args),
@@ -50,6 +53,7 @@ public final class CliParser {
                 Usage: java -jar ... [OPTIONS] [MAX_TICKS]
 
                 Options:
+                  --ui=MODE             Console UI mode: stream|live (default stream)
                   --ticks=N              Max simulation ticks (default 500)
                   --report-every=N       Print snapshot every N ticks (default 50)
                   --tick-delay-ms=N      Pause after each tick in ms (overrides island.tickDurationMillis in YAML)
@@ -62,6 +66,7 @@ public final class CliParser {
                   -h, --help             Show this message
 
                 Examples:
+                  --ui=live --tick-delay-ms=500 --report-every=1 --render-map-every=1
                   --ticks=1000 --no-delay
                   --scheduled --tick-delay-ms=10 --report-every=1
                   --render-map-every=25 --report-every=50
@@ -109,6 +114,7 @@ public final class CliParser {
                 || "-h".equals(arg)
                 || "--no-delay".equals(arg)
                 || "--scheduled".equals(arg)
+                || arg.startsWith("--ui=")
                 || arg.startsWith("--ticks=")
                 || arg.startsWith("--report-every=")
                 || arg.startsWith("--render-map-every=")
@@ -130,6 +136,19 @@ public final class CliParser {
             }
         }
         return DEFAULT_MAX_TICKS;
+    }
+
+    static UiMode parseUiMode(String[] args) {
+        String raw = "STREAM";
+        for (String a : args) {
+            if (a.startsWith("--ui=")) {
+                raw = a.substring("--ui=".length()).trim().toUpperCase();
+            }
+        }
+        if (!SUPPORTED_UI_MODES.contains(raw)) {
+            throw new IllegalArgumentException("--ui must be one of " + SUPPORTED_UI_MODES + ", got: " + raw);
+        }
+        return UiMode.valueOf(raw);
     }
 
     static long parseReportEveryTicks(String[] args) {

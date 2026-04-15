@@ -5,6 +5,7 @@ package ru.javarush;
  */
 public record CliOptions(
         boolean help,
+        UiMode uiMode,
         boolean scheduledMode,
         long maxTicks,
         long reportEveryTicks,

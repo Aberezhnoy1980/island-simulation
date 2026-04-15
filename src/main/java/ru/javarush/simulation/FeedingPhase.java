@@ -14,6 +14,8 @@ public final class FeedingPhase implements LifecyclePhase {
 
     @Override
     public void execute(SimulationContext context) {
-        feedingService.feedAll(context.island(), context.config(), context.random());
+        boolean parallelCellPasses = context.config().island().effectiveParallelMovementPlanning()
+                || context.config().island().effectiveParallelPlantGrowthPlanning();
+        feedingService.feedAll(context.island(), context.config(), context.random(), parallelCellPasses);
     }
 }

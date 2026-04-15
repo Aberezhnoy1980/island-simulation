@@ -6,7 +6,7 @@
 
 Консольная симуляция острова на Java: сетка локаций, растительность, популяции животных, пошаговый жизненный цикл (перемещение, питание, размножение, гибель). Параметры мира и видов задаются конфигурацией, а не константами в коде.
 
-**Статус:** рабочее ядро симуляции (фазы, питание, размножение, стоп-условия, валидация конфига), CLI (в т.ч. `--scheduled`, `--render-map-every`, `--seed`), таблица глифов по видам (`config/species-glyphs.yml`), демо-конфиг `config/demo-island.yml`, тесты на детерминизм и паритет режимов запуска; дальше — расширения (персистентность, доп. параллелизм по фазам, опционально CLI для стиля карты).
+**Статус:** рабочее ядро симуляции (фазы, питание, размножение, стоп-условия, валидация конфига), CLI (в т.ч. `--scheduled`, `--render-map-every`, `--seed`, `--ui=stream|live`), таблица глифов по видам (`config/species-glyphs.yml`), демо-конфиг `config/demo-island.yml`, тесты на детерминизм и паритет режимов запуска; дальше — расширения (персистентность, доп. параллелизм по фазам).
 
 ## Зачем такой проект
 
@@ -75,6 +75,7 @@ mvn -q exec:java -Dexec.args="--ticks=500 --seed=42 --no-delay"
 mvn -q exec:java -Dexec.args="--stop=NO_HERBIVORES --report-every=1"
 mvn -q exec:java -Dexec.args="--scheduled --tick-delay-ms=10 --report-every=1"
 mvn -q exec:java -Dexec.args="--render-map-every=25 --report-every=50"
+mvn -q exec:java -Dexec.args="--ui=live --tick-delay-ms=500 --ticks=1000"
 mvn -q exec:java -Dexec.args="--tick-delay-ms=0 --report-every=1"
 mvn -q exec:java -Dexec.args="--config=config/island.yml --ticks=200"
 mvn -q exec:java -Dexec.args="--config=config/demo-island.yml --ticks=15 --no-delay --report-every=1 --render-map-every=3 --seed=1"
@@ -88,6 +89,7 @@ mvn -q exec:java -Dexec.args="--config=config/demo-island.yml --ticks=15 --no-de
 Частота промежуточной статистики: `--report-every=N` (по умолчанию `50`).  
 Пауза между тиками по умолчанию из `island.tickDurationMillis` в YAML; можно переопределить: `--tick-delay-ms=N` или `--no-delay` (эквивалентно нулю). В стартовой строке печатается **фактическая** пауза.  
 `--scheduled` переключает запуск на `ScheduledExecutorService` (single-thread scheduled mode).  
+`--ui=MODE` переключает режим вывода: `stream` (текущий построчный лог) или `live` (перерисовка одного экрана ANSI, карта+статистика на месте). В `live` экран обновляется каждый тик; `--report-every` и `--render-map-every` не влияют на частоту. Если интерактивная консоль недоступна, `live` автоматически переключается на `stream`.  
 `--render-map-every=N` печатает карту острова каждые N тиков (`0` — отключено): один символ на клетку по «представителю» (хищник → травоядное → растение; при равенстве — лексикографически меньший `speciesId`). Глифы задаются в `config/species-glyphs.yml` (UTF-8); при отсутствии ключа для вида — запасной ASCII: `P` / `H` / `*`; пустая клетка — `.`.  
 `--seed=N` делает прогон воспроизводимым: при одинаковом конфиге и аргументах результат будет повторяться.  
 `--stop=TYPE` переопределяет stop condition из YAML для текущего запуска (`ALL_ANIMALS_DEAD`, `NO_HERBIVORES`, `NO_PREDATORS`).  
@@ -96,7 +98,8 @@ mvn -q exec:java -Dexec.args="--config=config/demo-island.yml --ticks=15 --no-de
 Приложение строит остров из конфига и гоняет симуляцию до `stopCondition` в YAML (`ALL_ANIMALS_DEAD`, `NO_HERBIVORES`, `NO_PREDATORS`) или до лимита тиков: по умолчанию цикл в `SimulationRunner`, при `--scheduled` — `ScheduledSimulationRunner` (тот же движок фаз).
 
 Порядок фаз: **`plantGrowth`** → `movement` → `feeding` → `reproduction` → `death`. Рост растений — `island.plantGrowthChancePercent` (в YAML; иначе дефолт 25), не выше `maxPerLocation` для вида `PLANT` на клетке.
-Параллельное **планирование** (применение — по-прежнему последовательное): `island.parallelMovementPlanning` для `movement`, `island.parallelPlantGrowthPlanning` для `plantGrowth`. Если второй ключ не задан в YAML, рост растений наследует флаг движения (обратная совместимость со старыми конфигами).
+Параллельное **планирование** (применение — по-прежнему последовательное): `island.parallelMovementPlanning` для `movement`, `island.parallelPlantGrowthPlanning` для `plantGrowth`. Если второй ключ не задан в YAML, рост растений наследует флаг движения (обратная совместимость со старыми конфигами).  
+Дополнительно при включённом параллельном режиме безопасно распараллеливаются cell-local проходы без межклеточной мутации: сброс `foodConsumedThisTick` в `feeding` и starvation-pass в `death`.
 В промежуточных отчётах по тикам дополнительно печатается `delta` (изменение числа существ за тик) и время фаз в миллисекундах.
 
 Перед запуском выполняется валидация `island.yml`: размеры/тайминги, диапазоны процентов, ссылки на существующие виды в `initialAnimals` и `dietMatrix`, поддерживаемые `stopCondition`.

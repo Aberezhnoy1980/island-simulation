@@ -172,4 +172,27 @@ class FeedingServiceTest {
         assertEquals(1, island.cell(0, 0).totalCreatures());
         assertEquals(2.0, wolf.foodConsumedThisTick(), 1e-6);
     }
+
+    @Test
+    void parallelResetStomachsModeKeepsFeedingBehavior() {
+        var animals = Map.of(
+                "wolf",
+                new AnimalSettings("Волк", 50.0, 30, 3, 8.0, "PREDATOR", null),
+                "rabbit",
+                new AnimalSettings("Кролик", 2.0, 150, 2, 0.45, "HERBIVORE", null));
+        var diet = Map.of("wolf", Map.of("rabbit", 100));
+        IslandSimulationConfig cfg = minimalConfig(animals, diet);
+
+        Island island = new Island(3, 3);
+        var wolf = new Predator("wolf", animals.get("wolf"));
+        var rabbit = new Herbivore("rabbit", animals.get("rabbit"));
+        island.cell(1, 1).add(wolf);
+        island.cell(1, 1).add(rabbit);
+
+        feeding.feedAll(island, cfg, alwaysWinRoll(), true);
+
+        assertEquals(1, island.cell(1, 1).totalCreatures());
+        assertTrue(island.cell(1, 1).residentsView().contains(wolf));
+        assertEquals(2.0, wolf.foodConsumedThisTick(), 1e-6);
+    }
 }
