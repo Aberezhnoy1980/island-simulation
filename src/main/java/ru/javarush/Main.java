@@ -54,14 +54,7 @@ public final class Main {
         SpeciesGlyphTable glyphTable = SpeciesGlyphTable.loadDefault();
 
         Island island = new IslandBuilder(random).build(config);
-        if (liveUi) {
-            renderLiveFrame("Start", island, null, glyphTable);
-        } else {
-            printSnapshot("Start", island, null);
-            if (options.renderMapEveryTicks() > 0) {
-                printMap("Start", island, glyphTable);
-            }
-        }
+        renderBoundaryState("Start", island, options, glyphTable, liveUi);
 
         var simulationContext = new SimulationContext(island, config, random);
         var engine = SimulationEngine.withDefaultPhases(simulationContext);
@@ -90,14 +83,7 @@ public final class Main {
         var stopEval = new StopConditionEvaluator();
         boolean stopMatched = stopEval.shouldStop(island, settings.stopCondition());
 
-        if (liveUi) {
-            renderLiveFrame("Done", island, null, glyphTable);
-        } else {
-            printSnapshot("Done", island, null);
-            if (options.renderMapEveryTicks() > 0) {
-                printMap("Done", island, glyphTable);
-            }
-        }
+        renderBoundaryState("Done", island, options, glyphTable, liveUi);
         System.out.printf("Executed ticks: %d, stop condition met: %b%n", executed, stopMatched);
     }
 
@@ -241,5 +227,21 @@ public final class Main {
         frame.append(mapBlock(title, island, glyphTable));
         System.out.print(frame);
         System.out.flush();
+    }
+
+    private static void renderBoundaryState(
+            String title,
+            Island island,
+            CliOptions options,
+            SpeciesGlyphTable glyphTable,
+            boolean liveUi) {
+        if (liveUi) {
+            renderLiveFrame(title, island, null, glyphTable);
+            return;
+        }
+        printSnapshot(title, island, null);
+        if (options.renderMapEveryTicks() > 0) {
+            printMap(title, island, glyphTable);
+        }
     }
 }

@@ -14,7 +14,6 @@ import java.util.Objects;
  * Загрузка {@link IslandSimulationConfig} из YAML: файл на диске или ресурс classpath.
  */
 public final class IslandConfigLoader {
-
     public static final String DEFAULT_CLASSPATH_RESOURCE = "config/island.yml";
 
     private final ObjectMapper yamlMapper;

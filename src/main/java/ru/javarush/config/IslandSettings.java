@@ -1,13 +1,10 @@
 package ru.javarush.config;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import java.util.Map;
 
 /**
  * Параметры острова и стартовые популяции из секции {@code island}.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public record IslandSettings(
         int width,
         int height,
@@ -32,7 +29,12 @@ public record IslandSettings(
          */
         Boolean parallelPlantGrowthPlanning
 ) {
-    /** Параллельное планирование движения; {@code null} трактуется как false. */
+    /**
+     * Параллельное планирование движения.
+     * <p>
+     * Поле nullable для обратной совместимости со старыми YAML: если ключ не задан, значение будет {@code null},
+     * что здесь трактуется как {@code false}.
+     */
     public boolean effectiveParallelMovementPlanning() {
         return Boolean.TRUE.equals(parallelMovementPlanning());
     }
