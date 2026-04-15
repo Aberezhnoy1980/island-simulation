@@ -6,7 +6,7 @@
 
 Консольная симуляция острова на Java: сетка локаций, растительность, популяции животных, пошаговый жизненный цикл (перемещение, питание, размножение, гибель). Параметры мира и видов задаются конфигурацией, а не константами в коде.
 
-**Статус:** рабочее ядро симуляции (фазы, питание, размножение, стоп-условия, валидация конфига), CLI (в т.ч. `--scheduled`, `--render-map-every`, `--seed`, `--ui=stream|live`), таблица глифов по видам (`config/species-glyphs.yml`), демо-конфиг `config/demo-island.yml`, тесты на детерминизм и паритет режимов запуска; дальше — расширения (персистентность, доп. параллелизм по фазам).
+**Статус:** рабочее ядро симуляции (фазы, питание, размножение, стоп-условия, валидация конфига), CLI (в т.ч. `--scheduled`, `--render-map-every`, `--seed`, `--ui=stream|live`), таблица глифов по видам (`config/species-glyphs.yml`), демо-конфиги `config/demo-island.yml` и `config/demo-predators.yml`, тесты на детерминизм и паритет режимов запуска; дальше — расширения (персистентность, доп. параллелизм по фазам).
 
 ## Зачем такой проект
 
@@ -20,7 +20,7 @@
 - Maven  
 - YAML: Jackson (`jackson-dataformat-yaml`)  
 - Тесты: JUnit 5  
-- Конфигурация по умолчанию: `src/main/resources/config/island.yml` (см. ТЗ); компактная демо-сцена: `config/demo-island.yml` (меньше сетка и видов — удобно смотреть карту в консоли)
+- Конфигурация по умолчанию: `src/main/resources/config/island.yml` (см. ТЗ); компактные демо-сцены: `config/demo-island.yml` (balanced) и `config/demo-predators.yml` (predator-heavy)
 
 ### Зависимости и плагины (зачем что)
 
@@ -55,6 +55,12 @@ mvn -q exec:java -Dexec.args="--config=config/island.yml --ticks=2000000 --repor
 mvn -q exec:java -Dexec.args="--config=config/demo-island.yml --ticks=500000 --report-every=1 --render-map-every=1 --tick-delay-ms=500"
 ```
 
+Альтернативный демо-профиль с повышенной долей хищников:
+
+```bash
+mvn -q exec:java -Dexec.args="--config=config/demo-predators.yml --ticks=500000 --report-every=1 --render-map-every=1 --tick-delay-ms=500"
+```
+
 ## Сборка, тесты, запуск
 
 ```bash
@@ -79,6 +85,7 @@ mvn -q exec:java -Dexec.args="--ui=live --tick-delay-ms=500 --ticks=1000"
 mvn -q exec:java -Dexec.args="--tick-delay-ms=0 --report-every=1"
 mvn -q exec:java -Dexec.args="--config=config/island.yml --ticks=200"
 mvn -q exec:java -Dexec.args="--config=config/demo-island.yml --ticks=15 --no-delay --report-every=1 --render-map-every=3 --seed=1"
+mvn -q exec:java -Dexec.args="--config=config/demo-predators.yml --ticks=15 --no-delay --report-every=1 --render-map-every=3"
 ```
 
 Демо-конфиг (`demo-island.yml`): остров **24×8**, несколько видов; пример выше печатает карту каждые 3 тика (UTF-8 терминал).
@@ -105,6 +112,11 @@ mvn -q exec:java -Dexec.args="--config=config/demo-island.yml --ticks=15 --no-de
 Перед запуском выполняется валидация `island.yml`: размеры/тайминги, диапазоны процентов, ссылки на существующие виды в `initialAnimals` и `dietMatrix`, поддерживаемые `stopCondition`.
 
 Консольная карта — `--render-map-every` и `SpeciesGlyphTable` / `species-glyphs.yml` (см. ТЗ).
+
+## Known limitations
+
+- При включенном parallel-планировании (`parallelMovementPlanning` / `parallelPlantGrowthPlanning`) часть вычислений использует `ThreadLocalRandom`; в этом режиме строгая воспроизводимость по `--seed` может отличаться от полностью sequential запуска.
+- `--ui=live` требует интерактивный терминал (TTY с ANSI). В неинтерактивной среде (часть IDE-runner/CI) включается безопасный fallback в `stream`.
 
 ## CI
 

@@ -64,4 +64,13 @@ class IslandConfigLoaderTest {
         assertEquals(8, cfg.island().height());
         assertEquals(5, cfg.animals().size());
     }
+
+    @Test
+    void loadsDemoPredatorsYamlFromClasspath() {
+        IslandSimulationConfig cfg = new IslandConfigLoader().load("config/demo-predators.yml");
+        assertEquals(24, cfg.island().width());
+        assertEquals(8, cfg.island().height());
+        assertEquals(12, cfg.island().initialAnimals().get("wolf"));
+        assertEquals(5, cfg.animals().size());
+    }
 }
