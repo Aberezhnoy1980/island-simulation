@@ -56,4 +56,12 @@ class IslandConfigLoaderTest {
         IslandSimulationConfig cfg = new IslandConfigLoader().load("config/island.yml");
         assertEquals(100, cfg.island().width());
     }
+
+    @Test
+    void loadsDemoIslandYamlFromClasspath() {
+        IslandSimulationConfig cfg = new IslandConfigLoader().load("config/demo-island.yml");
+        assertEquals(24, cfg.island().width());
+        assertEquals(8, cfg.island().height());
+        assertEquals(5, cfg.animals().size());
+    }
 }

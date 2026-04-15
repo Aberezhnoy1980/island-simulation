@@ -1,8 +1,12 @@
 # Island Simulation
 
+[![CI](https://github.com/Aberezhnoy1980/island-simulation/actions/workflows/ci.yml/badge.svg)](https://github.com/Aberezhnoy1980/island-simulation/actions/workflows/ci.yml)
+[![Java 21](https://img.shields.io/badge/Java-21-437291?logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Maven](https://img.shields.io/badge/Maven-3.x-C71A36?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
+
 Консольная симуляция острова на Java: сетка локаций, растительность, популяции животных, пошаговый жизненный цикл (перемещение, питание, размножение, гибель). Параметры мира и видов задаются конфигурацией, а не константами в коде.
 
-**Статус:** рабочее ядро симуляции (фазы, питание, размножение, стоп-условия, валидация конфига), CLI (в т.ч. `--scheduled`, `--render-map-every`, `--seed`), таблица глифов по видам (`config/species-glyphs.yml`), тесты на детерминизм и паритет режимов запуска; дальше — расширения (персистентность, доп. параллелизм по фазам, опционально CLI для стиля карты).
+**Статус:** рабочее ядро симуляции (фазы, питание, размножение, стоп-условия, валидация конфига), CLI (в т.ч. `--scheduled`, `--render-map-every`, `--seed`), таблица глифов по видам (`config/species-glyphs.yml`), демо-конфиг `config/demo-island.yml`, тесты на детерминизм и паритет режимов запуска; дальше — расширения (персистентность, доп. параллелизм по фазам, опционально CLI для стиля карты).
 
 ## Зачем такой проект
 
@@ -16,7 +20,40 @@
 - Maven  
 - YAML: Jackson (`jackson-dataformat-yaml`)  
 - Тесты: JUnit 5  
-- Конфигурация по умолчанию: `src/main/resources/config/island.yml` (см. ТЗ)
+- Конфигурация по умолчанию: `src/main/resources/config/island.yml` (см. ТЗ); компактная демо-сцена: `config/demo-island.yml` (меньше сетка и видов — удобно смотреть карту в консоли)
+
+### Зависимости и плагины (зачем что)
+
+| Компонент | Назначение |
+|-----------|------------|
+| **Jackson `jackson-dataformat-yaml`** | Чтение `island.yml` и `species-glyphs.yml` в объекты Java. Стандартный стек, меньше самописного парсинга и ошибок формата. |
+| **JUnit 5** (`junit-jupiter`, scope `test`) | Модульные и интеграционные тесты без запуска приложения вручную. |
+| **maven-compiler-plugin** (по умолчанию от Maven) | Компиляция под Java 21 (`maven.compiler.source/target` в `pom.xml`). |
+| **maven-surefire-plugin** | Запуск тестов при `mvn test` / `verify`. |
+| **maven-shade-plugin** | Сборка одного исполняемого JAR с `Main-Class` в манифесте — удобно запускать `java -jar ...` без classpath из десятков jar. |
+| **exec-maven-plugin** | `mvn exec:java` без предварительной упаковки JAR — быстрый цикл при разработке. |
+
+Дополнительные библиотеки не подключались намеренно: проект остаётся читаемым для тех, кто только осваивает экосистему Java.
+
+### Режим «как в задании»: ~500 ms на тик, карта и статистика каждый тик, до естественной остановки
+
+- **Пауза между тиками** берётся из `island.tickDurationMillis` в YAML (в дефолтном `config/island.yml` это **500**). Не передавайте `--no-delay` и не ставьте `--tick-delay-ms=0`, если нужна именно полсекунды. Явно: `--tick-delay-ms=500`.
+- **Статистика каждый тик:** `--report-every=1`.
+- **Карта каждый тик:** `--render-map-every=1`.
+- Симуляция **всегда** ограничена сверху числом `--ticks` (по умолчанию 500). Чтобы чаще дойти до **стоп-условия из YAML** (`stopCondition`, например все животные мертвы), задайте большой лимит, например `--ticks=2000000`. Иначе выполнение закончится по **лимиту тиков**, а не по «естественной» причине.
+- **Условия остановки** задаются в конфиге (`ALL_ANIMALS_DEAD`, `NO_HERBIVORES`, `NO_PREDATORS`) или разово через `--stop=...`. Для `ALL_ANIMALS_DEAD` «пустой» мир означает **нет животных**; растения (`Plant`) на клетках могут остаться — это всё ещё успешное срабатывание условия.
+
+Пример (полный остров 100×20 — очень много строк карты; для наглядной карты см. `config/demo-island.yml`):
+
+```bash
+mvn -q exec:java -Dexec.args="--config=config/island.yml --ticks=2000000 --report-every=1 --render-map-every=1 --tick-delay-ms=500"
+```
+
+Компактная сетка для демонстрации карты в терминале:
+
+```bash
+mvn -q exec:java -Dexec.args="--config=config/demo-island.yml --ticks=500000 --report-every=1 --render-map-every=1 --tick-delay-ms=500"
+```
 
 ## Сборка, тесты, запуск
 
@@ -40,7 +77,10 @@ mvn -q exec:java -Dexec.args="--scheduled --tick-delay-ms=10 --report-every=1"
 mvn -q exec:java -Dexec.args="--render-map-every=25 --report-every=50"
 mvn -q exec:java -Dexec.args="--tick-delay-ms=0 --report-every=1"
 mvn -q exec:java -Dexec.args="--config=config/island.yml --ticks=200"
+mvn -q exec:java -Dexec.args="--config=config/demo-island.yml --ticks=15 --no-delay --report-every=1 --render-map-every=3 --seed=1"
 ```
+
+Демо-конфиг (`demo-island.yml`): остров **24×8**, несколько видов; пример выше печатает карту каждые 3 тика (UTF-8 терминал).
 
 Справка по флагам: `--help` или `-h`.
 
@@ -70,6 +110,7 @@ mvn -q exec:java -Dexec.args="--config=config/island.yml --ticks=200"
 ## Документация
 
 - [Техническое задание и дорожная карта](docs/island-technical-spec.md)
+- [Архитектура, паттерны, укомпонентовка](docs/architecture.md)
 
 ## Лицензия
 

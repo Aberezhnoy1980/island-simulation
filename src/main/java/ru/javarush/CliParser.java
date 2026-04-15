@@ -70,6 +70,7 @@ public final class CliParser {
                   --report-every=1 --tick-delay-ms=0
                   --config=config/island.yml --ticks=200
                   --config=/tmp/my-island.yml
+                  --ticks=2000000 --report-every=1 --render-map-every=1 --tick-delay-ms=500
                 """;
     }
 
